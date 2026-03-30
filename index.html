@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1923">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>裂縫注膠補強計算</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="注膠計算">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #0a0e14;
+  --bg1: #0f1923;
+  --bg2: #162030;
+  --bg3: #1e2d3d;
+  --accent: #00d4ff;
+  --accent2: #ff6b35;
+  --accent3: #39d353;
+  --warn: #ffc107;
+  --danger: #ff4444;
+  --text: #d4e0ec;
+  --text2: #7a9bb5;
+  --border: rgba(0,212,255,0.15);
+  --border2: rgba(0,212,255,0.08);
+  --glow: 0 0 20px rgba(0,212,255,0.15);
+  --font-h: 'Rajdhani', sans-serif;
+  --font-b: 'Noto Sans TC', sans-serif;
+  --font-m: 'JetBrains Mono', monospace;
+  --r: 10px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg0);
+  color: var(--text);
+  font-family: var(--font-b);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══ TOP HEADER ═══ */
+.app-header {
+  background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 16px 12px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+.app-header-top {
+  display: flex; align-items: center; gap: 12px;
+}
+.app-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), #0088cc);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--glow);
+}
+.app-icon svg { width: 22px; height: 22px; }
+.app-title { flex: 1; }
+.app-title h1 {
+  font-family: var(--font-h);
+  font-size: 17px; font-weight: 700;
+  color: #fff; letter-spacing: 0.5px;
+}
+.app-title p {
+  font-family: var(--font-m);
+  font-size: 10px; color: var(--accent);
+  letter-spacing: 1px; margin-top: 2px;
+}
+
+/* ═══ TAB NAV ═══ */
+.tab-nav {
+  display: flex; gap: 4px; margin-top: 12px;
+  background: var(--bg0); border-radius: 8px; padding: 3px;
+}
+.tab-btn {
+  flex: 1; padding: 7px 4px;
+  background: transparent; border: none; color: var(--text2);
+  font-family: var(--font-b); font-size: 11px; font-weight: 500;
+  border-radius: 6px; cursor: pointer;
+  transition: all 0.2s; display: flex; flex-direction: column;
+  align-items: center; gap: 2px;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,136,204,0.15));
+  color: var(--accent);
+  box-shadow: 0 0 10px rgba(0,212,255,0.1);
+}
+.tab-btn span { font-size: 16px; }
+
+/* ═══ PAGES ═══ */
+.page { display: none; padding: 16px; padding-bottom: 80px; }
+.page.active { display: block; }
+
+/* ═══ SECTION CARD ═══ */
+.card {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  cursor: pointer;
+}
+.card-head-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.card-head h3 {
+  font-family: var(--font-h); font-size: 15px; font-weight: 600;
+  color: #fff; flex: 1; letter-spacing: 0.3px;
+}
+.card-head .chevron {
+  font-size: 12px; color: var(--text2);
+  transition: transform 0.2s;
+}
+.card.collapsed .chevron { transform: rotate(-90deg); }
+.card.collapsed .card-body { display: none; }
+.card-body { padding: 14px; }
+
+/* ═══ INPUT GROUPS ═══ */
+.input-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 10px;
+}
+.input-row.single { grid-template-columns: 1fr; }
+.input-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label {
+  font-size: 11px; color: var(--text2);
+  font-family: var(--font-m); letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.field label span { color: var(--accent); }
+
+.field input, .field select {
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 12px;
+  color: #fff;
+  font-family: var(--font-m); font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none; appearance: none;
+  width: 100%;
+}
+.field input:focus, .field select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+.field .unit {
+  font-size: 10px; color: var(--text2);
+  font-family: var(--font-m); margin-top: 2px;
+}
+
+/* Range slider */
+.field input[type=range] {
+  padding: 4px 0; height: 32px;
+  -webkit-appearance: auto; appearance: auto;
+  accent-color: var(--accent);
+  border: none; background: transparent;
+  box-shadow: none;
+}
+
+/* ═══ CALC BUTTON ═══ */
+.btn-calc {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #005f8a, #007ab8, #0099e6);
+  border: none; border-radius: var(--r);
+  color: #fff; font-family: var(--font-h);
+  font-size: 18px; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0,153,230,0.4);
+  transition: all 0.2s; position: relative; overflow: hidden;
+}
+.btn-calc::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+}
+.btn-calc:active { transform: scale(0.98); }
+
+/* ═══ RESULT METRICS ═══ */
+.metrics-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-bottom: 12px;
+}
+.metric {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 8px; padding: 12px;
+  position: relative; overflow: hidden;
+}
+.metric::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.metric.ok::before { background: var(--accent3); }
+.metric.warn::before { background: var(--warn); }
+.metric.danger::before { background: var(--danger); }
+.metric.info::before { background: var(--accent); }
+
+.metric-label {
+  font-family: var(--font-m); font-size: 9px;
+  color: var(--text2); letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.metric-value {
+  font-family: var(--font-h); font-size: 20px; font-weight: 700;
+  color: #fff; line-height: 1; margin-bottom: 3px;
+}
+.metric-value.ok { color: var(--accent3); }
+.metric-value.warn { color: var(--warn); }
+.metric-value.danger { color: var(--danger); }
+.metric-value.info { color: var(--accent); }
+.metric-sub {
+  font-family: var(--font-m); font-size: 10px; color: var(--text2);
+}
+.metric-badge {
+  position: absolute; top: 10px; right: 10px;
+  font-size: 16px;
+}
+
+/* ═══ STATUS BAR ═══ */
+.status-bar {
+  border-radius: 8px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px; font-size: 13px;
+}
+.status-bar.ok { background: rgba(57,211,83,0.1); border: 1px solid rgba(57,211,83,0.3); color: var(--accent3); }
+.status-bar.warn { background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3); color: var(--warn); }
+.status-bar.danger { background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); color: var(--danger); }
+.status-bar-icon { font-size: 20px; flex-shrink: 0; }
+.status-bar-text { flex: 1; line-height: 1.4; }
+.status-bar-title { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+
+/* ═══ CANVAS CHART ═══ */
+.chart-wrap {
+  background: var(--bg2);
+  border-radius: 8px; padding: 12px;
+  margin-bottom: 10px; overflow: hidden;
+}
+.chart-label {
+  font-family: var(--font-m); font-size: 10px;
+  color: var(--text2); letter-spacing: 1px; margin-bottom: 8px;
+  text-transform: uppercase;
+}
+canvas { display: block; width: 100%; border-radius: 6px; }
+
+/* Legend */
+.legend {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-top: 8px; padding: 0 4px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-m); font-size: 10px; color: var(--text2);
+}
+.legend-dot { width: 12px; height: 3px; border-radius: 2px; }
+
+/* ═══ DATA TABLE ═══ */
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--font-m); font-size: 11px;
+}
+.data-table thead tr {
+  background: var(--bg3);
+}
+.data-table th {
+  padding: 8px 8px; text-align: center;
+  color: var(--accent); font-weight: 600;
+  font-size: 10px; letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 7px 8px; text-align: center;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .t-ok { color: var(--accent3); font-weight: 600; }
+.data-table .t-warn { color: var(--warn); }
+.data-table .t-danger { color: var(--danger); font-weight: 600; }
+.data-table .t-info { color: var(--accent); }
+
+/* ═══ FORMULA BLOCK ═══ */
+.formula {
+  background: var(--bg0);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-family: var(--font-m); font-size: 12px;
+  color: var(--text); line-height: 1.9;
+}
+.formula .f-result {
+  color: var(--accent); font-weight: 600;
+}
+.formula .f-warn { color: var(--warn); }
+
+/* ═══ CALC STEP ═══ */
+.calc-step {
+  border: 1px solid var(--border2);
+  border-radius: 8px; margin-bottom: 8px;
+  overflow: hidden;
+}
+.calc-step-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg2);
+}
+.step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent); color: var(--bg0);
+  font-family: var(--font-h); font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-title {
+  font-family: var(--font-h); font-size: 14px; font-weight: 600;
+  color: #fff; flex: 1;
+}
+.step-result-badge {
+  font-family: var(--font-m); font-size: 11px;
+  padding: 3px 8px; border-radius: 20px;
+}
+.step-result-badge.ok { background: rgba(57,211,83,0.15); color: var(--accent3); }
+.step-result-badge.warn { background: rgba(255,193,7,0.15); color: var(--warn); }
+.step-result-badge.danger { background: rgba(255,68,68,0.15); color: var(--danger); }
+.calc-step-body { padding: 12px; }
+
+/* ═══ QC CHECKLIST ═══ */
+.qc-section { margin-bottom: 12px; }
+.qc-section-title {
+  font-family: var(--font-h); font-size: 14px; font-weight: 600;
+  color: var(--accent); letter-spacing: 0.5px;
+  margin-bottom: 8px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border2);
+}
+.qc-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--border2);
+}
+.qc-item:last-child { border-bottom: none; }
+.qc-chk {
+  width: 22px; height: 22px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; flex-shrink: 0; margin-top: 1px;
+}
+.qc-chk.ok { background: rgba(57,211,83,0.15); color: var(--accent3); border: 1px solid rgba(57,211,83,0.3); }
+.qc-chk.warn { background: rgba(255,193,7,0.15); color: var(--warn); border: 1px solid rgba(255,193,7,0.3); }
+.qc-chk.fail { background: rgba(255,68,68,0.15); color: var(--danger); border: 1px solid rgba(255,68,68,0.3); }
+.qc-text { flex: 1; }
+.qc-text strong { font-size: 13px; color: var(--text); display: block; margin-bottom: 2px; }
+.qc-text small { font-size: 11px; color: var(--text2); font-family: var(--font-m); line-height: 1.4; }
+
+/* ═══ SUGGESTION CHIPS ═══ */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip {
+  padding: 5px 10px; border-radius: 20px;
+  font-family: var(--font-m); font-size: 11px;
+  border: 1px solid;
+}
+.chip.blue { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.3); color: var(--accent); }
+.chip.orange { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.3); color: var(--accent2); }
+.chip.green { background: rgba(57,211,83,0.1); border-color: rgba(57,211,83,0.3); color: var(--accent3); }
+
+/* ═══ EMPTY STATE ═══ */
+.empty-state {
+  text-align: center; padding: 48px 24px; color: var(--text2);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state h3 { font-family: var(--font-h); font-size: 18px; color: var(--text); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; line-height: 1.6; }
+
+/* ═══ DIVIDER ═══ */
+.divider {
+  height: 1px; background: var(--border2); margin: 12px 0;
+}
+
+/* ═══ INFO ROW ═══ */
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 0; border-bottom: 1px solid var(--border2);
+}
+.info-row:last-child { border-bottom: none; }
+.info-key { font-size: 12px; color: var(--text2); }
+.info-val { font-family: var(--font-m); font-size: 13px; color: var(--text); }
+.info-val.hl { color: var(--accent); }
+
+/* ═══ PULSE ANIMATION ═══ */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.pulse { animation: pulse 2s infinite; }
+
+/* ═══ SCROLL ═══ */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Inject progress bar */
+.progress-wrap { margin: 8px 0; }
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-family: var(--font-m); font-size: 10px;
+  color: var(--text2); margin-bottom: 4px;
+}
+.progress-bar {
+  height: 6px; background: var(--bg0);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.progress-fill.ok { background: linear-gradient(90deg, var(--accent3), #00ff66); }
+.progress-fill.warn { background: linear-gradient(90deg, var(--warn), #ffaa00); }
+.progress-fill.danger { background: linear-gradient(90deg, var(--danger), #ff8800); }
+
+/* ── QC 互動勾選 ── */
+.qc-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 0; border-bottom: 1px solid var(--border2);
+  cursor: pointer; transition: background 0.15s;
+  border-radius: 4px;
+}
+.qc-item:last-child { border-bottom: none; }
+.qc-item:active { background: rgba(255,255,255,0.03); }
+
+/* 未勾選：文字橘黃色，待確認 */
+.qc-item .qc-text strong { color: var(--warn); transition: color 0.25s; }
+.qc-item .qc-text small  { color: rgba(255,193,7,0.6); transition: color 0.25s; }
+
+/* 已勾選：文字轉白 */
+.qc-item.checked .qc-text strong { color: var(--text); }
+.qc-item.checked .qc-text small  { color: var(--text2); }
+
+/* 勾選框 */
+.qc-chk {
+  width: 24px; height: 24px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0; margin-top: 1px;
+  transition: all 0.2s;
+}
+/* 未勾選：空心框 */
+.qc-item:not(.checked) .qc-chk.pend {
+  background: rgba(255,193,7,0.08);
+  border: 1.5px solid rgba(255,193,7,0.45);
+  color: transparent;
+}
+/* 已勾選樣式 */
+.qc-chk.ok   { background: rgba(57,211,83,0.15);  color: var(--accent3); border: 1px solid rgba(57,211,83,0.35); }
+.qc-chk.warn { background: rgba(255,193,7,0.15);  color: var(--warn);    border: 1px solid rgba(255,193,7,0.35); }
+.qc-chk.fail { background: rgba(255,68,68,0.15);  color: var(--danger);  border: 1px solid rgba(255,68,68,0.35); }
+
+/* 勾選進度條 */
+.qc-progress-wrap { margin: 0 0 12px 0; }
+.qc-progress-bar  { height: 5px; background: var(--bg0); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+.qc-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent3), #00ff66); transition: width 0.4s ease; }
+.qc-progress-label{ display: flex; justify-content: space-between; font-family: var(--font-m); font-size: 10px; color: var(--text2); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--bg0); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── 優化建議卡片 ── */
+.sug-block {
+  border: 1px solid var(--border2);
+  border-radius: 8px; margin-bottom: 10px; overflow: hidden;
+}
+.sug-block-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; background: var(--bg2);
+}
+.sug-block-title {
+  flex: 1; font-size: 13px; font-weight: 600; color: var(--text);
+}
+.sug-tag {
+  font-family: var(--font-m); font-size: 9px; font-weight: 600;
+  padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+.sug-tag.blue   { background: rgba(0,212,255,0.12); color: var(--accent);  border: 1px solid rgba(0,212,255,0.3); }
+.sug-tag.green  { background: rgba(57,211,83,0.12);  color: var(--accent3); border: 1px solid rgba(57,211,83,0.3); }
+.sug-tag.orange { background: rgba(255,107,53,0.12); color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+.sug-block-body { padding: 8px 12px; }
+.sug-data-row {
+  display: flex; align-items: flex-start;
+  padding: 5px 0; border-bottom: 1px solid var(--border2);
+  gap: 8px;
+}
+.sug-data-row:last-child { border-bottom: none; }
+.sug-data-key {
+  font-family: var(--font-m); font-size: 10px; color: var(--text2);
+  min-width: 90px; flex-shrink: 0; padding-top: 1px;
+}
+.sug-data-val {
+  font-family: var(--font-m); font-size: 11px; color: var(--accent);
+  flex: 1; line-height: 1.5;
+}
+
+/* ── 舊 sug-row（保留相容）── */
+.sug-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border2);
+}
+.sug-row:last-child { border-bottom: none; }
+.sug-idx {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,193,7,0.15); border: 1px solid rgba(255,193,7,0.4);
+  color: var(--warn); font-family: var(--font-h); font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ── 報告匯出頁 ── */
+.rpt-field { display:flex; flex-direction:column; gap:5px; margin-bottom:12px; }
+.rpt-field label { font-family:var(--font-m); font-size:11px; color:var(--text2); letter-spacing:0.5px; text-transform:uppercase; }
+.rpt-field input, .rpt-field textarea {
+  background:var(--bg0); border:1px solid var(--border); border-radius:7px;
+  padding:10px 12px; color:#fff; font-family:var(--font-m); font-size:13px;
+  transition:border-color 0.2s; width:100%; resize:none;
+}
+.rpt-field input:focus, .rpt-field textarea:focus { outline:none; border-color:var(--accent); }
+.rpt-field textarea { min-height:70px; }
+.btn-pdf {
+  width:100%; padding:16px; border:none; border-radius:var(--r);
+  font-family:var(--font-h); font-size:18px; font-weight:700;
+  letter-spacing:1px; cursor:pointer; transition:all 0.2s;
+  margin-bottom:10px; position:relative; overflow:hidden;
+}
+.btn-pdf.primary { background:linear-gradient(135deg,#b84a1e,#d4561e,#e06520); color:#fff; box-shadow:0 4px 20px rgba(184,74,30,0.45); }
+.btn-pdf.secondary { background:var(--bg2); color:var(--accent); border:1px solid var(--border); }
+.btn-pdf:active { transform:scale(0.98); }
+.pdf-status { text-align:center; padding:12px; font-family:var(--font-m); font-size:12px; color:var(--text2); }
+.pdf-status.ok  { color:var(--accent3); }
+.pdf-status.err { color:var(--danger); }
+
+/* ── PDF 列印區（螢幕隱藏，列印時顯示）── */
+#pdf-target { display:none; }
+
+/* PDF 內部樣式（列印用） */
+.pdf-page {
+  width:210mm; padding:14mm 14mm 12mm; background:#fff; color:#111;
+  font-family:'Noto Sans TC','Microsoft JhengHei',sans-serif; font-size:11pt;
+  box-sizing:border-box;
+}
+.pdf-cover { text-align:center; padding:20mm 0 16mm; border-bottom:2px solid #1a3a5c; margin-bottom:10mm; }
+.pdf-cover h1 { font-size:21pt; font-weight:900; color:#1a3a5c; margin-bottom:4mm; }
+.pdf-cover h2 { font-size:13pt; font-weight:400; color:#222; margin-bottom:8mm; }
+.pdf-cover-grid { display:grid; grid-template-columns:1fr 1fr; gap:3mm 8mm; text-align:left; font-size:10pt; }
+.pdf-cover-item label { color:#444; display:block; font-size:9pt; margin-bottom:1mm; }
+.pdf-cover-item span  { color:#111; font-weight:600; }
+.pdf-sec { margin-bottom:6mm; page-break-inside:avoid; }
+.pdf-sec-title {
+  font-size:12.5pt; font-weight:700; color:#1a3a5c;
+  border-left:4px solid #1a3a5c; padding-left:3mm;
+  margin-bottom:4mm;
+}
+.pdf-table { width:100%; border-collapse:collapse; font-size:10pt; margin-bottom:4mm; }
+.pdf-table th { background:#1a3a5c; color:#fff; padding:3mm 4mm; text-align:left; font-size:10pt; }
+.pdf-table td { padding:2.5mm 4mm; border-bottom:0.5pt solid #ddd; vertical-align:top; color:#111; }
+.pdf-table tr:nth-child(even) td { background:#f4f6f9; }
+.pdf-ok   { color:#1a7a30; font-weight:700; }
+.pdf-warn { color:#b85800; font-weight:700; }
+.pdf-fail { color:#b80000; font-weight:700; }
+.pdf-formula { background:#f0f4f8; border-left:3pt solid #1a3a5c; padding:3mm 4mm; font-family:monospace; font-size:9pt; margin:3mm 0; line-height:1.9; color:#111; }
+.pdf-footer { border-top:1pt solid #ccc; padding-top:3mm; font-size:9pt; color:#444; display:flex; justify-content:space-between; margin-top:6mm; }
+.pdf-qc-item { display:flex; gap:3mm; padding:2.5mm 0; border-bottom:0.3pt solid #eee; }
+.pdf-qc-chk { width:5mm; height:5mm; border:1pt solid #888; border-radius:1mm; flex-shrink:0; margin-top:0.5mm; display:flex; align-items:center; justify-content:center; font-size:9pt; }
+.pdf-qc-chk.done { background:#1a7a30; border-color:#1a7a30; color:#fff; }
+.pdf-qc-text strong { font-size:10pt; display:block; color:#111; }
+.pdf-qc-text small  { font-size:9pt; color:#333; }
+.pdf-metric-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:3mm; margin-bottom:4mm; }
+.pdf-metric { border:0.5pt solid #1a3a5c; border-radius:2mm; padding:3.5mm; }
+.pdf-metric-label { font-size:9.5pt; color:#222; margin-bottom:1mm; }
+.pdf-metric-val   { font-size:16pt; font-weight:700; color:#1a3a5c; }
+.pdf-metric-sub   { font-size:9pt; color:#444; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ APP HEADER ═══════════ -->
+<div class="app-header">
+  <div class="app-header-top">
+	<div class="app-icon">
+	  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+		<path d="M12 2L2 7l10 5 10-5-10-5z"/>
+		<path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+	  </svg>
+	</div>
+	<div class="app-title">
+	  <h1>裂縫注膠補強計算</h1>
+	  <p>CRACK EPOXY INJECTION ANALYZER v2.0</p>
+	</div>
+  </div>
+  <nav class="tab-nav">
+	<button class="tab-btn active" onclick="showTab('params')" id="tab-params">
+	  <span>⚙️</span>參數
+	</button>
+	<button class="tab-btn" onclick="showTab('calc')" id="tab-calc">
+	  <span>🔢</span>計算
+	</button>
+	<button class="tab-btn" onclick="showTab('chart')" id="tab-chart">
+	  <span>📊</span>圖表
+	</button>
+	<button class="tab-btn" onclick="showTab('qc')" id="tab-qc">
+	  <span>✅</span>品管
+	</button>
+	<button class="tab-btn" onclick="showTab('report')" id="tab-report">
+	  <span>📄</span>報告
+	</button>
+  </nav>
+</div>
+
+<!-- ═══════════════════════════════════
+	 PAGE 1: 參數輸入
+═══════════════════════════════════ -->
+<div class="page active" id="page-params">
+
+  <!-- 注膠器參數 -->
+  <div class="card" id="card-injector">
+	<div class="card-head" onclick="toggleCard('injector')">
+	  <div class="card-head-icon" style="background:rgba(0,212,255,0.15)">💉</div>
+	  <h3>注膠器參數</h3>
+	  <span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="input-row">
+		<div class="field">
+		  <label>注射筒內徑 <span>d</span></label>
+		  <input type="number" id="p_diam" value="30" min="15" max="60" step="1" oninput="updateAp()">
+		  <div class="unit">單位：mm　（常用 25、30、38 mm）</div>
+		</div>
+		<div class="field">
+		  <label>活塞截面積 <span>Aₚ</span></label>
+		  <input type="number" id="p_Ap" value="706.9" readonly style="opacity:0.6">
+		  <div class="unit">單位：mm²　（自動計算）</div>
+		</div>
+	  </div>
+	  <div class="input-row">
+		<div class="field">
+		  <label>有效行程 <span>S</span></label>
+		  <input type="number" id="p_stroke" value="120" min="50" max="300" step="5">
+		  <div class="unit">單位：mm</div>
+		</div>
+		<div class="field">
+		  <label>最大容積 <span>V_max</span></label>
+		  <input type="number" id="p_Vmax" value="84.8" readonly style="opacity:0.6">
+		  <div class="unit">單位：mL　（自動計算）</div>
+		</div>
+	  </div>
+	</div>
+  </div>
+
+  <!-- 橡皮筋參數 -->
+  <div class="card" id="card-rubber">
+	<div class="card-head" onclick="toggleCard('rubber')">
+	  <div class="card-head-icon" style="background:rgba(255,107,53,0.15)">🔴</div>
+	  <h3>橡皮筋參數</h3>
+	  <span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="input-row">
+		<div class="field">
+		  <label>橡皮筋根數 <span>n</span></label>
+		  <input type="number" id="p_n" value="8" min="1" max="30" step="1">
+		  <div class="unit">根</div>
+		</div>
+		<div class="field">
+		  <label>等效勁度 <span>k_rb</span></label>
+		  <input type="number" id="p_k" value="0.18" min="0.01" max="2" step="0.01">
+		  <div class="unit">N/mm　（實測標定值）</div>
+		</div>
+	  </div>
+	  <div class="input-row">
+		<div class="field">
+		  <label>自然長度 <span>L₀</span></label>
+		  <input type="number" id="p_L0" value="80" min="20" max="200" step="5">
+		  <div class="unit">mm</div>
+		</div>
+		<div class="field">
+		  <label>安裝伸長量 <span>ΔL₀</span></label>
+		  <input type="number" id="p_dL" value="75" min="10" max="250" step="5">
+		  <div class="unit">mm　→ L = L₀ + ΔL₀</div>
+		</div>
+	  </div>
+	  <div class="field" style="margin-top:4px">
+		<label>勁度老化修正係數 <span>η_age</span></label>
+		<select id="p_age">
+		  <option value="1.0">1.00　— 新品（未使用）</option>
+		  <option value="0.9">0.90　— 輕度老化（使用 &lt;10次）</option>
+		  <option value="0.8" selected>0.80　— 中度老化（使用 10~30次）</option>
+		  <option value="0.7">0.70　— 嚴重老化（建議更換）</option>
+		</select>
+		<div class="unit">老化後有效勁度 = k_rb × η_age</div>
+	  </div>
+	</div>
+  </div>
+
+  <!-- 環氧樹脂參數 -->
+  <div class="card" id="card-epoxy">
+	<div class="card-head" onclick="toggleCard('epoxy')">
+	  <div class="card-head-icon" style="background:rgba(57,211,83,0.15)">🧪</div>
+	  <h3>環氧樹脂參數</h3>
+	  <span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="input-row">
+		<div class="field">
+		  <label>動態黏度 <span>μ</span></label>
+		  <select id="p_mu_sel" onchange="updateMuFromSel()">
+			<option value="0.25">超低黏 — 0.25 Pa·s</option>
+			<option value="0.35">低黏度 — 0.35 Pa·s</option>
+			<option value="0.45" selected>標準低黏 — 0.45 Pa·s</option>
+			<option value="0.80">中黏度 — 0.80 Pa·s</option>
+			<option value="1.50">高黏度 — 1.50 Pa·s</option>
+			<option value="custom">自訂</option>
+		  </select>
+		</div>
+		<div class="field">
+		  <label>黏度值 <span>μ</span></label>
+		  <input type="number" id="p_mu" value="0.45" min="0.05" max="10" step="0.05">
+		  <div class="unit">Pa·s　（溫度修正後）</div>
+		</div>
+	  </div>
+	  <div class="input-row">
+		<div class="field">
+		  <label>施工溫度 <span>T</span></label>
+		  <input type="number" id="p_temp" value="28" min="5" max="45" step="1" oninput="updateMuByTemp()">
+		  <div class="unit">°C</div>
+		</div>
+		<div class="field">
+		  <label>適用期 <span>t_pot</span></label>
+		  <input type="number" id="p_pot" value="60" min="10" max="240" step="5">
+		  <div class="unit">分鐘（28°C 基準）</div>
+		</div>
+	  </div>
+	  <div class="input-row">
+		<div class="field">
+		  <label>混膠比 A:B（體積）</label>
+		  <select id="p_ratio">
+			<option value="2:1">2 : 1</option>
+			<option value="1:1">1 : 1</option>
+			<option value="4:1">4 : 1</option>
+		  </select>
+		</div>
+		<div class="field">
+		  <label>充填效率 <span>η_fill</span></label>
+		  <input type="number" id="p_eta" value="0.85" min="0.5" max="1.0" step="0.05">
+		  <div class="unit">0.5 ~ 1.0　（考慮損耗）</div>
+		</div>
+	  </div>
+	</div>
+  </div>
+
+  <!-- 裂縫幾何 -->
+  <div class="card" id="card-crack">
+	<div class="card-head" onclick="toggleCard('crack')">
+	  <div class="card-head-icon" style="background:rgba(255,193,7,0.15)">📐</div>
+	  <h3>裂縫幾何參數</h3>
+	  <span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="input-row">
+		<div class="field">
+		  <label>裂縫開口 <span>e</span></label>
+		  <input type="number" id="p_e" value="0.50" min="0.05" max="5" step="0.05">
+		  <div class="unit">mm　（裂縫計平均值，低壓注膠適用 0.2~2.0 mm）</div>
+		</div>
+		<div class="field">
+		  <label>裂縫深度 <span>d_f</span></label>
+		  <input type="number" id="p_df" value="150" min="10" max="1000" step="10">
+		  <div class="unit">mm　（超音波量測）</div>
+		</div>
+	  </div>
+	  <div class="input-row">
+		<div class="field">
+		  <label>有效注膠寬 <span>w</span></label>
+		  <input type="number" id="p_w" value="200" min="50" max="2000" step="50">
+		  <div class="unit">mm　（每孔負責範圍，典型值 150~250 mm）</div>
+		</div>
+		<div class="field">
+		  <label>裂縫傾斜角 <span>θ</span></label>
+		  <input type="number" id="p_theta" value="90" min="30" max="90" step="5">
+		  <div class="unit">度　（垂直=90°）</div>
+		</div>
+	  </div>
+	  <div class="input-row single">
+		<div class="field">
+		  <label>裂縫形態</label>
+		  <select id="p_ctype">
+			<option value="flexure">彎曲裂縫（Flexure Crack）</option>
+			<option value="shear">剪力裂縫（Shear Crack）</option>
+			<option value="shrinkage">收縮裂縫（Shrinkage Crack）</option>
+			<option value="settlement">沉陷裂縫（Settlement Crack）</option>
+		  </select>
+		</div>
+	  </div>
+	</div>
+  </div>
+
+  <button class="btn-calc" onclick="runCalc()">
+	▶ 執行壓力歷時分析計算
+  </button>
+
+</div>
+
+<!-- ═══════════════════════════════════
+	 PAGE 2: 計算過程
+═══════════════════════════════════ -->
+<div class="page" id="page-calc">
+  <div id="calc-content">
+	<div class="empty-state">
+	  <div class="icon">🔢</div>
+	  <h3>尚未執行計算</h3>
+	  <p>請至「參數」頁輸入數據<br>點擊「執行計算」按鈕</p>
+	</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+	 PAGE 3: 圖表
+═══════════════════════════════════ -->
+<div class="page" id="page-chart">
+  <div id="chart-content">
+	<div class="empty-state">
+	  <div class="icon">📊</div>
+	  <h3>圖表尚未產生</h3>
+	  <p>請先執行計算</p>
+	</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+	 PAGE 4: 品管
+═══════════════════════════════════ -->
+<div class="page" id="page-qc">
+  <div id="qc-content">
+	<div class="empty-state">
+	  <div class="icon">✅</div>
+	  <h3>品管項目尚未產生</h3>
+	  <p>請先執行計算以產生品管建議</p>
+	</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+	 PAGE 5: 報告匯出
+═══════════════════════════════════ -->
+<div class="page" id="page-report">
+  <div id="report-content">
+	<div class="empty-state">
+	  <div class="icon">📄</div>
+	  <h3>尚未產生報告</h3>
+	  <p>請先執行計算，再填寫報告資訊</p>
+	</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+	 JAVASCRIPT
+═══════════════════════════════════ -->
+<script>
+// ── TAB CONTROL ──
+function showTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'report') buildReportPage();
+}
+
+// ── CARD COLLAPSE ──
+function toggleCard(id) {
+  var el = document.getElementById('card-' + id);
+  if (el) el.classList.toggle('collapsed');
+}
+
+// ── AUTO CALC: Ap ──
+function updateAp() {
+  const d = parseFloat(document.getElementById('p_diam').value) || 30;
+  const Ap = Math.PI * (d/2) * (d/2);
+  document.getElementById('p_Ap').value = Ap.toFixed(1);
+  const stroke = parseFloat(document.getElementById('p_stroke').value) || 120;
+  document.getElementById('p_Vmax').value = (Ap * stroke / 1000).toFixed(1);
+}
+
+function updateMuFromSel() {
+  const v = document.getElementById('p_mu_sel').value;
+  if (v !== 'custom') document.getElementById('p_mu').value = v;
+}
+
+function updateMuByTemp() {
+  const T = parseFloat(document.getElementById('p_temp').value) || 25;
+  const baseT = 25, baseMu = 0.45;
+  const mu = baseMu * Math.exp(-0.04 * (T - baseT));
+  document.getElementById('p_mu').value = mu.toFixed(3);
+}
+
+// ── MAIN CALCULATION ──
+let G = {}; // global results
+
+function runCalc() {
+  // read params
+  const d    = parseFloat(document.getElementById('p_diam').value);
+  const S    = parseFloat(document.getElementById('p_stroke').value);
+  const n    = parseFloat(document.getElementById('p_n').value);
+  const k_rb = parseFloat(document.getElementById('p_k').value);
+  const L0   = parseFloat(document.getElementById('p_L0').value);
+  const dL0  = parseFloat(document.getElementById('p_dL').value);
+  const age  = parseFloat(document.getElementById('p_age').value);
+  const mu   = parseFloat(document.getElementById('p_mu').value);
+  const pot  = parseFloat(document.getElementById('p_pot').value);
+  const eta  = parseFloat(document.getElementById('p_eta').value);
+  const e    = parseFloat(document.getElementById('p_e').value);
+  const df   = parseFloat(document.getElementById('p_df').value);
+  const w    = parseFloat(document.getElementById('p_w').value);
+  const theta= parseFloat(document.getElementById('p_theta').value);
+  const temp = parseFloat(document.getElementById('p_temp').value);
+
+  // Derived
+  const Ap   = Math.PI * (d/2) * (d/2);
+  const Vmax = Ap * S;
+  const k_eff = k_rb * age;
+  const theta_rad = theta * Math.PI / 180;
+
+  // STEP 1: Initial pressure  [N/mm² = MPa]
+  const F0   = n * k_eff * dL0;          // N
+  const P0   = F0 / Ap;                  // MPa
+
+  // STEP 2: Pressure decay coeff  [MPa/mm³]
+  const alpha = (n * k_eff) / (Ap * Ap);
+
+  // STEP 3: Crack volume  [mm³]
+  const V_crack  = w * e * df * Math.sin(theta_rad);
+  const V_inject = V_crack / eta;
+
+  // STEP 4: Hagen-Poiseuille 滲透係數
+  // 推導：lf(t) = sqrt(C_pen × t)，t 單位秒，lf 單位 mm
+  //
+  // H-P 平行板流量：Q = (w·e³/12μ)·(P/lf)  [mm⁴/(N·s) × N/mm² / mm = mm³/s]
+  // V = w·e·lf·sinθ  →  lf = V/(w·e·sinθ)
+  // V·dV/dt = (w²·e⁴·sin²θ / 12μ)·P₀
+  // 積分得 lf²(t) = (e²·P₀·sin²θ / 6μ)·t
+  //
+  // 單位一致性：
+  //   e [mm], P₀ [N/mm²=MPa], μ [Pa·s = N·s/m² = 10⁻⁶ N·s/mm²]
+  //   μ 需換算為 [N·s/mm²]：μ_mm = μ_Pa × 1e-6
+  //
+  const mu_mm = mu * 1e-6;               // Pa·s → N·s/mm²
+  const sinTh = Math.sin(theta_rad);
+
+  // 裂縫壁等效阻力修正係數 ξ（考慮粗糙度、毛細管、曲折效應）
+  // 混凝土裂縫實驗值約 500~2000，預設取 1000
+  const xi = 1000;
+  const C_pen = (e * e * P0 * sinTh * sinTh) / (6 * mu_mm * xi);  // mm²/s
+
+  // STEP 5: 完全滲透時間  [s → min]
+  const t_full_sec = (df * df) / C_pen;
+  const t_full_min = t_full_sec / 60;
+
+  // STEP 6: 完填時壓力
+  const V_at_full = V_crack;
+  const P_at_full = P0 - alpha * V_at_full;
+
+  // STEP 7: 壓力降至 P_min 的時間
+  const denom = alpha * w * e * sinTh;
+  const t_pmin_sec = denom > 0
+	? Math.pow((P0 - 0.05) / denom, 2) / C_pen
+	: Infinity;
+  const t_pmin_min = t_pmin_sec / 60;
+
+  // STEP 8: 容積核核
+  const vol_ok = V_inject <= Vmax;
+
+  // Status
+  const press_range_ok = P0 >= 0.05 && P0 <= 0.40;
+  const press_full_ok  = P_at_full >= 0.05;
+  const pot_ok  = t_full_min <= pot * 0.85;
+  const pot_warn = t_full_min <= pot && !pot_ok;
+
+  // Store globals
+  G = {
+	d, S, n, k_rb, L0, dL0, age, mu, mu_mm, pot, eta, e, df, w, theta, temp,
+	Ap, Vmax, k_eff, F0, P0, alpha, sinTh, C_pen, xi,
+	V_crack, V_inject, t_full_sec, t_full_min,
+	P_at_full, t_pmin_sec, t_pmin_min,
+	press_range_ok, press_full_ok, pot_ok, pot_warn, vol_ok
+  };
+
+  buildCalcPage();
+  buildChartPage();
+  buildQCPage();
+
+  // Switch to calc tab
+  showTab('calc');
+}
+
+// ── BUILD CALC PAGE ──
+// ── 共用：產生優化建議清單 HTML（計算頁 & 品管頁共用）──
+function buildSugHTML() {
+  const G2 = G;
+  const sug = [];
+
+  // ── 判斷問題類型，產生具體數據建議 ──
+
+  // 1. 充填時間超過適用期
+  if (!G2.pot_ok) {
+	// 方案A：增加伸長量 → 使 t_full 縮短到 0.80×pot
+	// t_full = df² / C，C = e²·P0·sin²θ/(6μ)，P0 = n·k·dL/Ap
+	// 要使 t_full = 0.80*pot → C_need = df²/(0.80*pot*60)
+	// C_need = e²·P0_new·sin²θ/(6μ) → P0_new = C_need*6μ/(e²*sin²θ)
+	// P0_new = n·k_eff·dL_new/Ap → dL_new = P0_new*Ap/(n*k_eff)
+	const sinTh = Math.sin(G2.theta*Math.PI/180);
+	const C_need = G2.df*G2.df / (0.80*G2.pot*60);
+	const P0_need = C_need*6*G2.mu_mm*G2.xi / (G2.e*G2.e*sinTh*sinTh);
+	const dL_new  = Math.ceil(P0_need*G2.Ap/(G2.n*G2.k_eff)/5)*5;
+	const P0_new  = G2.n*G2.k_eff*dL_new/G2.Ap;
+	const t_new   = G2.df*G2.df/((G2.e*G2.e*P0_new*sinTh*sinTh)/(6*G2.mu_mm*G2.xi))/60;
+	sug.push({
+	  t:'方案 A｜增加橡皮筋伸長量', c:'blue',
+	  tag:'最快實施',
+	  rows:[
+		['建議伸長量 ΔL₀', `${dL_new} mm（現值 ${G2.dL0} mm）`],
+		['調整後初始壓力 P₀', `${P0_new.toFixed(4)} MPa`],
+		['預估充填時間 t_full', `${t_new.toFixed(1)} min（適用期 ${G2.pot} min 的 ${(t_new/G2.pot*100).toFixed(0)}%）`],
+		['操作方式', '重新預拉橡皮筋，無需更換材料'],
+	  ]
+	});
+
+	// 方案B：降低黏度 → 同樣使 t_full = 0.80×pot
+	// μ_new = e²·P0·sin²θ·0.80*pot*60/(6·df²)
+	const mu_need_mm = G2.e*G2.e*G2.P0*sinTh*sinTh*0.80*G2.pot*60/(6*G2.df*G2.df*G2.xi);
+	const mu_need = mu_need_mm * 1e6; // 轉回 Pa·s 供顯示
+	const t_muB   = G2.df*G2.df/((G2.e*G2.e*G2.P0*sinTh*sinTh)/(6*mu_need_mm*G2.xi))/60;
+	sug.push({
+	  t:'方案 B｜選用低黏度環氧樹脂', c:'green',
+	  tag:'效果顯著',
+	  rows:[
+		['建議黏度 μ', `≤ ${mu_need.toFixed(3)} Pa·s（現值 ${G2.mu} Pa·s）`],
+		['預估充填時間 t_full', `${t_muB.toFixed(1)} min（目標 ≤ ${(G2.pot*0.80).toFixed(0)} min）`],
+		['適用溫度', `施工溫度 ${G2.temp}°C，建議選超低黏型（0.2~0.35 Pa·s）`],
+		['注意事項', '確認膠液適用期仍 ≥ 60 min，避免使用溫度過高加速硬化'],
+	  ]
+	});
+
+	// 方案C：分段施工
+	const seg = 3;
+	const df_seg = (G2.df/seg).toFixed(0);
+	const C_seg  = G2.e*G2.e*G2.P0*sinTh*sinTh/(6*G2.mu_mm*G2.xi);
+	const t_seg  = (G2.df/seg)*(G2.df/seg)/C_seg/60;
+	sug.push({
+	  t:'方案 C｜分段注膠施工', c:'orange',
+	  tag:'不換材料',
+	  rows:[
+		['分段數', `${seg} 段，每段深度 ${df_seg} mm`],
+		['每段充填時間', `${t_seg.toFixed(1)} min（<< 適用期 ${G2.pot} min）`],
+		['各段注入量', `${(G2.V_crack/seg/1000/G2.eta).toFixed(1)} mL`],
+		['施工順序', '由裂縫底部向口部逐段注膠，各段固化 24h 後再進行下段'],
+	  ]
+	});
+  }
+
+  // 2. 注射筒容積不足
+  if (!G2.vol_ok) {
+	const V_need = G2.V_inject/1000;
+	// 建議筒徑：使單筒容積 ≥ V_need，行程保持 120mm
+	const d_need = Math.ceil(Math.sqrt(V_need*1000*4/(Math.PI*120))/5)*5;
+	const Ap_new = Math.PI*(d_need/2)*(d_need/2);
+	const Vmax_new = Ap_new*120/1000;
+	sug.push({
+	  t:'方案｜更換大容積注射筒', c:'blue',
+	  tag:'必要修正',
+	  rows:[
+		['現況', `設計注入量 ${V_need.toFixed(1)} mL > 筒容 ${(G2.Vmax/1000).toFixed(1)} mL`],
+		['建議筒徑', `ø${d_need} mm（現值 ø${G2.d} mm）`],
+		['新筒容積', `${Vmax_new.toFixed(0)} mL（裕度 ${((Vmax_new/V_need-1)*100).toFixed(0)}%）`],
+		['或改為', `2 支 ø${G2.d} mm 注射筒串聯，各注入 ${(V_need/2).toFixed(1)} mL`],
+	  ]
+	});
+  }
+
+  // 3. 初始壓力不足
+  if (!G2.press_range_ok && G2.P0 < 0.05) {
+	const F_need = 0.08*G2.Ap;
+	const dL_need= Math.ceil(F_need/(G2.n*G2.k_eff)/5)*5;
+	const n_need = Math.ceil(F_need/(G2.k_eff*G2.dL0));
+	sug.push({
+	  t:'方案｜提高初始壓力至規範下限', c:'orange',
+	  tag:'必要修正',
+	  rows:[
+		['現況', `P₀ = ${G2.P0.toFixed(4)} MPa < 規範下限 0.05 MPa`],
+		['對策①增伸長量', `ΔL₀ ≥ ${dL_need} mm（現值 ${G2.dL0} mm）`],
+		['對策②增根數',   `n ≥ ${n_need} 根（現值 ${G2.n} 根）`],
+		['目標',           `P₀ ≥ 0.08 MPa（建議值，含 0.05 MPa 之安全裕度）`],
+	  ]
+	});
+  }
+
+  // 4. 初始壓力過高
+  if (!G2.press_range_ok && G2.P0 > 0.40) {
+	const P0_safe = 0.35;
+	const dL_safe = Math.floor(P0_safe*G2.Ap/(G2.n*G2.k_eff)/5)*5;
+	const n_safe  = Math.floor(P0_safe*G2.Ap/(G2.k_eff*G2.dL0));
+	sug.push({
+	  t:'方案｜降低初始壓力至安全範圍', c:'orange',
+	  tag:'必要修正',
+	  rows:[
+		['現況', `P₀ = ${G2.P0.toFixed(4)} MPa > 規範上限 0.40 MPa，可能造成二次損傷`],
+		['對策①減伸長量', `ΔL₀ ≤ ${dL_safe} mm（現值 ${G2.dL0} mm）`],
+		['對策②減根數',   `n ≤ ${n_safe} 根（現值 ${G2.n} 根）`],
+		['目標',           `P₀ ≤ 0.35 MPa`],
+	  ]
+	});
+  }
+
+  // 5. 完填時壓力低於 0.05 MPa
+  if (!G2.press_full_ok) {
+	const P_def = G2.P0 - G2.P_at_full; // 壓降
+	const dL_comp = Math.ceil((G2.dL0 + P_def*G2.Ap/(G2.n*G2.k_eff))/5)*5;
+	const P0_comp = G2.n*G2.k_eff*dL_comp/G2.Ap;
+	const Pfull_comp = P0_comp - G2.alpha*G2.V_crack;
+	sug.push({
+	  t:'方案｜補償完填時壓力不足', c:'blue',
+	  tag:'必要修正',
+	  rows:[
+		['現況', `完填時 P(t_full) = ${G2.P_at_full.toFixed(4)} MPa < 0.05 MPa`],
+		['建議伸長量', `ΔL₀ = ${dL_comp} mm → P₀ = ${P0_comp.toFixed(4)} MPa`],
+		['調整後完填壓力', `P(t_full) = ${Pfull_comp.toFixed(4)} MPa`],
+		['或縮短注入距離', `降低每孔負責寬度 w，減少單次注入量`],
+	  ]
+	});
+  }
+
+  // ── 全部符合時 ──
+  if (sug.length === 0) {
+	return `<div class="status-bar ok" style="margin:0">
+	  <div class="status-bar-icon">🎉</div>
+	  <div class="status-bar-text">
+		<div class="status-bar-title">設計參數全部符合規範</div>
+		<div style="font-size:12px">P₀、完填時間、注入量均在規範範圍內，可直接施工</div>
+	  </div>
+	</div>`;
+  }
+
+  // ── 產生 HTML ──
+  return sug.map(function(s,i){
+	const rows = s.rows.map(function(r){
+	  return `<div class="sug-data-row">
+		<span class="sug-data-key">${r[0]}</span>
+		<span class="sug-data-val">${r[1]}</span>
+	  </div>`;
+	}).join('');
+	return `<div class="sug-block">
+	  <div class="sug-block-head">
+		<div class="sug-idx">${i+1}</div>
+		<div class="sug-block-title">${s.t}</div>
+		<div class="sug-tag ${s.c}">${s.tag}</div>
+	  </div>
+	  <div class="sug-block-body">${rows}</div>
+	</div>`;
+  }).join('');
+}
+
+function buildCalcPage() {
+  const G2 = G;
+  const statusClass = (G2.press_range_ok && G2.press_full_ok && G2.vol_ok)
+	? (G2.pot_ok ? 'ok' : 'warn') : 'danger';
+  const statusIcon = statusClass === 'ok' ? '✅' : statusClass === 'warn' ? '⚠️' : '❌';
+  const statusTitle = statusClass === 'ok' ? '系統設計符合要求'
+	: statusClass === 'warn' ? '設計可行，建議優化' : '設計不符合規範要求';
+  const statusMsg = !G2.press_range_ok
+	? `初始壓力 P₀ = ${G2.P0.toFixed(4)} MPa 超出規範範圍 0.05 ~ 0.40 MPa`
+	: !G2.press_full_ok
+	? `完填時壓力 P(t_full) = ${G2.P_at_full.toFixed(4)} MPa 低於下限 0.05 MPa`
+	: !G2.vol_ok
+	? `所需注入量 ${(G2.V_inject/1000).toFixed(1)} mL 超過注射筒容積 ${(G2.Vmax/1000).toFixed(1)} mL`
+	: !G2.pot_ok
+	? `充填時間 ${G2.t_full_min.toFixed(1)} min 超過適用期 ${G2.pot} min（已逾 85% 警戒線）`
+	: '壓力範圍、充填時間及注入量均符合設計要求';
+
+  // Build time series for table
+  const tSteps = [0,5,10,15,20,25,30,40,50,60,70,80,90,100,120];
+  let tableRows = '';
+  tSteps.forEach(tm => {
+	const ts = tm * 60;
+	const lf = Math.min(Math.sqrt(G2.C_pen * ts), G2.df);
+	const V  = G2.w * G2.e * lf * Math.sin(G2.theta * Math.PI/180);
+	const P  = Math.max(G2.P0 - G2.alpha * V, 0);
+	const pct = (lf / G2.df * 100).toFixed(0);
+	let st, sc;
+	if (lf >= G2.df) { st = '完成'; sc = 't-ok'; }
+	else if (tm >= G2.pot) { st = '逾期'; sc = 't-danger'; }
+	else if (P < 0.05) { st = '壓不足'; sc = 't-danger'; }
+	else if (tm >= G2.pot * 0.85) { st = '警戒'; sc = 't-warn'; }
+	else { st = '注膠中'; sc = 't-info'; }
+	tableRows += `<tr>
+	  <td class="t-info">${tm}</td>
+	  <td>${lf.toFixed(1)}</td>
+	  <td>${pct}%</td>
+	  <td class="${P < 0.05 ? 't-danger' : P < 0.08 ? 't-warn' : ''}">${P.toFixed(4)}</td>
+	  <td>${(P*10.197).toFixed(3)}</td>
+	  <td class="${sc}">${st}</td>
+	</tr>`;
+  });
+
+  const pBadge = (v, ok) => `<span class="step-result-badge ${ok?'ok':'danger'}">${v}</span>`;
+  const wBadge = (v) => `<span class="step-result-badge warn">${v}</span>`;
+
+  document.getElementById('calc-content').innerHTML = `
+  <!-- Status -->
+  <div class="status-bar ${statusClass}">
+	<div class="status-bar-icon">${statusIcon}</div>
+	<div class="status-bar-text">
+	  <div class="status-bar-title">${statusTitle}</div>
+	  <div style="font-size:12px">${statusMsg}</div>
+	</div>
+  </div>
+
+  <!-- Key Metrics -->
+  <div class="metrics-grid">
+	<div class="metric ${G2.press_range_ok?'ok':'danger'}">
+	  <div class="metric-badge">${G2.press_range_ok?'✅':'❌'}</div>
+	  <div class="metric-label">初始壓力 P₀</div>
+	  <div class="metric-value ${G2.press_range_ok?'ok':'danger'}">${G2.P0.toFixed(3)}</div>
+	  <div class="metric-sub">MPa　(${(G2.P0*10.197).toFixed(2)} kgf/cm²)</div>
+	</div>
+	<div class="metric ${G2.press_full_ok?'ok':'danger'}">
+	  <div class="metric-badge">${G2.press_full_ok?'✅':'⚠️'}</div>
+	  <div class="metric-label">完填時壓力</div>
+	  <div class="metric-value ${G2.press_full_ok?'ok':'danger'}">${G2.P_at_full.toFixed(3)}</div>
+	  <div class="metric-sub">MPa 於 t_full</div>
+	</div>
+	<div class="metric ${G2.pot_ok?'ok':G2.pot_warn?'warn':'danger'}">
+	  <div class="metric-badge">${G2.pot_ok?'✅':'⚠️'}</div>
+	  <div class="metric-label">完填時間</div>
+	  <div class="metric-value ${G2.pot_ok?'ok':G2.pot_warn?'warn':'danger'}">${G2.t_full_min.toFixed(1)}</div>
+	  <div class="metric-sub">分鐘　(適用期 ${G2.pot} min)</div>
+	</div>
+	<div class="metric ${G2.vol_ok?'ok':'danger'}">
+	  <div class="metric-badge">${G2.vol_ok?'✅':'❌'}</div>
+	  <div class="metric-label">設計注入量</div>
+	  <div class="metric-value ${G2.vol_ok?'ok':'danger'}">${(G2.V_inject/1000).toFixed(1)}</div>
+	  <div class="metric-sub">mL　(筒容 ${(G2.Vmax/1000).toFixed(0)} mL)</div>
+	</div>
+  </div>
+
+  <!-- ★ 優化建議（儀表板下、充填率分析上） -->
+  <div class="card" id="card-sug-calc">
+	<div class="card-head" onclick="toggleCard('sug-calc')">
+	  <div class="card-head-icon" style="background:rgba(255,193,7,0.15)">💡</div>
+	  <h3>設計優化建議</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  ${buildSugHTML()}
+	</div>
+  </div>
+
+  <!-- 充填率分析 -->
+  <div class="card" id="card-prog">
+	<div class="card-head" onclick="toggleCard('prog')">
+	  <div class="card-head-icon" style="background:rgba(0,212,255,0.1)">📏</div>
+	  <h3>充填率分析</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="info-row"><span class="info-key">裂縫理論體積</span><span class="info-val hl">${(G2.V_crack/1000).toFixed(2)} mL</span></div>
+	  <div class="info-row"><span class="info-key">設計注入量（/η）</span><span class="info-val hl">${(G2.V_inject/1000).toFixed(2)} mL</span></div>
+	  <div class="info-row"><span class="info-key">注射筒最大容積</span><span class="info-val">${(G2.Vmax/1000).toFixed(1)} mL</span></div>
+	  <div class="divider"></div>
+	  <div class="progress-wrap">
+		<div class="progress-label"><span>注入量/容積比</span><span>${Math.min((G2.V_inject/G2.Vmax*100),100).toFixed(0)}%</span></div>
+		<div class="progress-bar"><div class="progress-fill ${G2.vol_ok?'ok':'danger'}" style="width:${Math.min(G2.V_inject/G2.Vmax*100,100).toFixed(0)}%"></div></div>
+	  </div>
+	  <div class="progress-wrap">
+		<div class="progress-label"><span>充填時間/適用期比</span><span>${Math.min((G2.t_full_min/G2.pot*100),120).toFixed(0)}%</span></div>
+		<div class="progress-bar"><div class="progress-fill ${G2.pot_ok?'ok':G2.pot_warn?'warn':'danger'}" style="width:${Math.min(G2.t_full_min/G2.pot*100,100).toFixed(0)}%"></div></div>
+	  </div>
+	</div>
+  </div>
+
+  <!-- STEP by STEP -->
+  <div class="card" id="card-steps">
+	<div class="card-head" onclick="toggleCard('steps')">
+	  <div class="card-head-icon" style="background:rgba(57,211,83,0.1)">🔢</div>
+	  <h3>逐步計算流程</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">1</div>
+		  <div class="step-title">活塞截面積 Aₚ</div>
+		  ${pBadge(G2.Ap.toFixed(1)+' mm²', true)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			Aₚ = π × (d/2)² = π × (${G2.d}/2)²<br>
+			Aₚ = π × ${(G2.d/2).toFixed(1)}²<br>
+			<span class="f-result">Aₚ = ${G2.Ap.toFixed(2)} mm²</span>
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">2</div>
+		  <div class="step-title">有效勁度（老化修正）</div>
+		  ${pBadge(G2.k_eff.toFixed(3)+' N/mm', true)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			k_eff = k_rb × η_age = ${G2.k_rb} × ${G2.age}<br>
+			<span class="f-result">k_eff = ${G2.k_eff.toFixed(4)} N/mm</span>
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">3</div>
+		  <div class="step-title">初始壓力 P₀</div>
+		  ${G2.press_range_ok ? pBadge(G2.P0.toFixed(4)+' MPa ✓', true) : pBadge(G2.P0.toFixed(4)+' MPa ✗', false)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			P₀ = (n × k_eff × ΔL₀) / Aₚ<br>
+			P₀ = (${G2.n} × ${G2.k_eff.toFixed(4)} × ${G2.dL0}) / ${G2.Ap.toFixed(2)}<br>
+			P₀ = ${G2.F0.toFixed(2)} N / ${G2.Ap.toFixed(2)} mm²<br>
+			<span class="f-result ${G2.press_range_ok?'':'f-warn'}">P₀ = ${G2.P0.toFixed(4)} MPa = ${(G2.P0*10.197).toFixed(3)} kgf/cm²</span><br>
+			規範範圍：0.05 ~ 0.40 MPa　→ ${G2.press_range_ok?'✅ 符合':'❌ 不符合'}
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">4</div>
+		  <div class="step-title">壓力衰減係數 α</div>
+		  ${pBadge(G2.alpha.toExponential(3)+' MPa/mm³', true)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			α = (n × k_eff) / Aₚ²<br>
+			α = (${G2.n} × ${G2.k_eff.toFixed(4)}) / (${G2.Ap.toFixed(2)})²<br>
+			<span class="f-result">α = ${G2.alpha.toExponential(4)} MPa/mm³</span><br>
+			意義：每注入 1 mm³ 膠液，壓力衰減 α MPa
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">5</div>
+		  <div class="step-title">裂縫體積及設計注入量</div>
+		  ${G2.vol_ok ? pBadge((G2.V_inject/1000).toFixed(1)+' mL ✓', true) : pBadge((G2.V_inject/1000).toFixed(1)+' mL ✗', false)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			V_crack = w × e × d_f × sin(θ)<br>
+			V_crack = ${G2.w} × ${G2.e} × ${G2.df} × sin(${G2.theta}°)<br>
+			V_crack = ${G2.w} × ${G2.e} × ${G2.df} × ${Math.sin(G2.theta*Math.PI/180).toFixed(4)}<br>
+			<span class="f-result">V_crack = ${(G2.V_crack/1000).toFixed(2)} mL</span><br>
+			V_inject = V_crack / η_fill = ${(G2.V_crack/1000).toFixed(2)} / ${G2.eta}<br>
+			<span class="f-result ${G2.vol_ok?'':'f-warn'}">V_inject = ${(G2.V_inject/1000).toFixed(2)} mL　→ 筒容 ${(G2.Vmax/1000).toFixed(1)} mL ${G2.vol_ok?'✅':'❌'}</span>
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">6</div>
+		  <div class="step-title">滲透深度方程式（√t 律）</div>
+		  ${pBadge('解析解', true)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			由 H-P 方程推導（含裂縫壁阻力修正係數 ξ）：<br>
+			l_f(t) = √[ e² × P₀ × sin²(θ) / (6μ × ξ) × t ]<br>
+			μ = ${G2.mu} Pa·s = ${G2.mu_mm.toExponential(3)} N·s/mm²，ξ = ${G2.xi}<br>
+			C = e²×P₀×sin²θ / (6×μ_mm×ξ)<br>
+			C = ${G2.e}² × ${G2.P0.toFixed(4)} × ${Math.pow(G2.sinTh,2).toFixed(4)} / (6 × ${G2.mu_mm.toExponential(3)} × ${G2.xi})<br>
+			<span class="f-result">C = ${G2.C_pen.toFixed(4)} mm²/s</span><br>
+			l_f(t) = √(${G2.C_pen.toFixed(4)} × t)　[t: 秒, l_f: mm]
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">7</div>
+		  <div class="step-title">壓力歷時方程式</div>
+		  ${pBadge('聯立解', true)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			P(t) = P₀ − α × V(t)<br>
+			V(t) = w × e × l_f(t) × sin(θ) = w × e × sin(θ) × √(C×t)<br>
+			令 β = α × w × e × sin(θ) × √C<br>
+			β = ${G2.alpha.toExponential(3)} × ${G2.w} × ${G2.e} × ${Math.sin(G2.theta*Math.PI/180).toFixed(4)} × √${G2.C_pen.toFixed(6)}<br>
+			<span class="f-result">P(t) = ${G2.P0.toFixed(4)} − ${(G2.alpha * G2.w * G2.e * Math.sin(G2.theta*Math.PI/180) * Math.sqrt(G2.C_pen)).toExponential(3)} × √t</span>
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">8</div>
+		  <div class="step-title">完全充填時間 t_full</div>
+		  ${G2.pot_ok ? pBadge(G2.t_full_min.toFixed(1)+' min ✓', true) : G2.pot_warn ? wBadge(G2.t_full_min.toFixed(1)+' min ⚠') : pBadge(G2.t_full_min.toFixed(1)+' min ✗', false)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			令 l_f(t_full) = d_f = ${G2.df} mm<br>
+			t_full = d_f² / C = ${G2.df}² / ${G2.C_pen.toFixed(6)}<br>
+			t_full = ${(G2.df*G2.df).toFixed(0)} / ${G2.C_pen.toFixed(6)}<br>
+			<span class="f-result ${G2.pot_ok?'':G2.pot_warn?'f-warn':'f-warn'}">t_full = ${G2.t_full_sec.toFixed(0)} 秒 = ${G2.t_full_min.toFixed(1)} 分鐘</span><br>
+			適用期警戒值（×0.85）= ${(G2.pot*0.85).toFixed(0)} min　→ ${G2.pot_ok?'✅ 安全':G2.pot_warn?'⚠️ 接近上限':'❌ 超出適用期'}
+		  </div>
+		</div>
+	  </div>
+
+	  <div class="calc-step">
+		<div class="calc-step-head">
+		  <div class="step-num">9</div>
+		  <div class="step-title">完填時壓力驗核</div>
+		  ${G2.press_full_ok ? pBadge(G2.P_at_full.toFixed(4)+' MPa ✓', true) : pBadge(G2.P_at_full.toFixed(4)+' MPa ✗', false)}
+		</div>
+		<div class="calc-step-body">
+		  <div class="formula">
+			P(t_full) = P₀ − α × V_crack<br>
+			P(t_full) = ${G2.P0.toFixed(4)} − ${G2.alpha.toExponential(4)} × ${G2.V_crack.toFixed(1)}<br>
+			P(t_full) = ${G2.P0.toFixed(4)} − ${(G2.alpha * G2.V_crack).toFixed(4)}<br>
+			<span class="f-result ${G2.press_full_ok?'':'f-warn'}">P(t_full) = ${G2.P_at_full.toFixed(4)} MPa　→ ${G2.press_full_ok?'✅ ≥ 0.05 MPa':'❌ < 0.05 MPa，壓力不足'}</span>
+		  </div>
+		</div>
+	  </div>
+
+	</div>
+  </div>
+
+  <!-- Time Series Table -->
+  <div class="card" id="card-table">
+	<div class="card-head" onclick="toggleCard('table')">
+	  <div class="card-head-icon" style="background:rgba(255,193,7,0.1)">📋</div>
+	  <h3>數值計算逐時步驟表</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body" style="padding:8px">
+	  <div class="table-scroll">
+		<table class="data-table">
+		  <thead>
+			<tr>
+			  <th>t<br>(min)</th>
+			  <th>l_f<br>(mm)</th>
+			  <th>充填<br>率</th>
+			  <th>P(t)<br>(MPa)</th>
+			  <th>P(t)<br>(kgf/cm²)</th>
+			  <th>狀態</th>
+			</tr>
+		  </thead>
+		  <tbody>${tableRows}</tbody>
+		</table>
+	  </div>
+	</div>
+  </div>
+  `;
+}
+
+// ── BUILD CHART PAGE ──
+// ═══════════════════════════════════════════════════════
+// 圖表引擎：純 SVG innerHTML 字串，Android 100% 相容
+// viewBox 固定座標系，無 Canvas / DPR / timing 問題
+// ═══════════════════════════════════════════════════════
+
+// 座標常數
+var VW=480, VH=260, PL=62, PR=62, PT=32, PB=54;
+// 繪圖區
+function pw(){return VW-PL-PR;}   // 356
+function ph(h){return (h||VH)-PT-PB;}
+
+// 座標映射
+function mx(v,max){return PL + pw()*v/max;}
+function my(v,max,h){return PT + ph(h)*(1-v/max);}
+
+// 點陣列→ polyline points 字串
+function pts(arr){return arr.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');}
+
+// ── 共用格線 + 軸框 SVG 字串 ──
+function svgGrid(nX,nY,h){
+  var H=h||VH, cw=pw(), ch=ph(h), s='';
+  for(var i=0;i<=nY;i++){
+	var y=PT+ch*i/nY;
+	s+='<line x1="'+PL+'" y1="'+y.toFixed(1)+'" x2="'+(PL+cw)+'" y2="'+y.toFixed(1)+'" stroke="#ffffff" stroke-opacity="0.12" stroke-width="0.7"/>';
+  }
+  for(var j=0;j<=nX;j++){
+	var x=PL+cw*j/nX;
+	s+='<line x1="'+x.toFixed(1)+'" y1="'+PT+'" x2="'+x.toFixed(1)+'" y2="'+(PT+ch)+'" stroke="#cccccc" stroke-width="0.7"/>';
+  }
+  s+='<rect x="'+PL+'" y="'+PT+'" width="'+cw+'" height="'+ch+'" fill="none" stroke="#7a9bb5" stroke-opacity="0.4" stroke-width="0.8"/>';
+  return s;
+}
+
+// ── X 軸刻度 + 標題 ──
+function svgXAxis(maxT, label, h){
+  var ch=ph(h), s='', N=4;
+  for(var i=0;i<=N;i++){
+	var x=(PL+pw()*i/N).toFixed(1);
+	var v=(maxT*i/N).toFixed(0);
+	s+='<line x1="'+x+'" y1="'+(PT+ch)+'" x2="'+x+'" y2="'+(PT+ch+4)+'" stroke="#666666" stroke-width="0.8"/>';
+	s+='<text x="'+x+'" y="'+(PT+ch+17).toFixed(1)+'" text-anchor="middle" font-size="10" font-family="monospace" fill="#333333">'+v+'</text>';
+  }
+  s+='<text x="'+(PL+pw()/2).toFixed(1)+'" y="'+(PT+ch+36).toFixed(1)+'" text-anchor="middle" font-size="9" font-family="monospace" fill="#555555">'+label+'</text>';
+  return s;
+}
+
+// ── 左 Y 軸刻度 + 旋轉標題 ──
+function svgYLeft(maxV, dec, color, label, h){
+  var ch=ph(h), s='', N=4;
+  for(var i=0;i<=N;i++){
+	var y=(PT+ch*i/N).toFixed(1);
+	var v=(maxV*(N-i)/N).toFixed(dec);
+	s+='<line x1="'+(PL-4)+'" y1="'+y+'" x2="'+PL+'" y2="'+y+'" stroke="'+color+'" stroke-opacity="0.6" stroke-width="0.8"/>';
+	s+='<text x="'+(PL-7)+'" y="'+(parseFloat(y)+3.5).toFixed(1)+'" text-anchor="end" font-size="9.5" font-family="monospace" fill="'+color+'">'+v+'</text>';
+  }
+  var cy=(PT+ch/2).toFixed(1);
+  s+='<text text-anchor="middle" font-size="9" font-family="monospace" fill="'+color+'" transform="translate(12,'+cy+') rotate(-90)">'+label+'</text>';
+  return s;
+}
+
+// ── 右 Y 軸刻度 + 旋轉標題 ──
+function svgYRight(maxV, dec, color, label, h){
+  var ch=ph(h), rx=PL+pw(), s='', N=4;
+  for(var i=0;i<=N;i++){
+	var y=(PT+ch*i/N).toFixed(1);
+	var v=(maxV*(N-i)/N).toFixed(dec);
+	s+='<line x1="'+rx+'" y1="'+y+'" x2="'+(rx+4)+'" y2="'+y+'" stroke="'+color+'" stroke-opacity="0.6" stroke-width="0.8"/>';
+	s+='<text x="'+(rx+7)+'" y="'+(parseFloat(y)+3.5).toFixed(1)+'" text-anchor="start" font-size="9.5" font-family="monospace" fill="'+color+'">'+v+'</text>';
+  }
+  var cy=(PT+ch/2).toFixed(1);
+  var tx=(VW-12).toFixed(1);
+  s+='<text text-anchor="middle" font-size="9" font-family="monospace" fill="'+color+'" transform="translate('+tx+','+cy+') rotate(90)">'+label+'</text>';
+  return s;
+}
+
+// ── SVG 容器包裝 ──
+function svgWrap(inner, h){
+  var H=h||VH;
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+VW+' '+H+'" style="width:100%;display:block" overflow="visible">'
+	+'<rect x="0" y="0" width="'+VW+'" height="'+H+'" fill="#0a0e14"/>'
+	+inner+'</svg>';
+}
+
+// ═══════════════════
+// FIG.1：壓力 + 深度
+// ═══════════════════
+function makePressureChart(){
+  var maxT=Math.max(G.t_full_min*1.5, G.pot*1.3, 40);
+  var maxP=G.P0*1.18, maxL=G.df*1.15;
+  var sinTh=Math.sin(G.theta*Math.PI/180);
+  var N=150, cw=pw(), ch=ph();
+
+  var s=svgGrid(4,4);
+
+  // 適用期警示帶
+  var potFrac=Math.min(G.pot/maxT,1);
+  var potX=(PL+cw*potFrac).toFixed(1);
+  s+='<rect x="'+potX+'" y="'+PT+'" width="'+(PL+cw-parseFloat(potX)).toFixed(1)+'" height="'+ch+'" fill="#ffc107" fill-opacity="0.06"/>';
+  s+='<line x1="'+potX+'" y1="'+PT+'" x2="'+potX+'" y2="'+(PT+ch)+'" stroke="#ffc107" stroke-opacity="0.55" stroke-width="1" stroke-dasharray="5 4"/>';
+  s+='<text x="'+(parseFloat(potX)+3)+'" y="'+(PT+10)+'" font-size="8" font-family="monospace" fill="#ffc107">適用期</text>';
+
+  // P_min 線
+  var pminY=my(0.05,maxP).toFixed(1);
+  s+='<line x1="'+PL+'" y1="'+pminY+'" x2="'+(PL+cw)+'" y2="'+pminY+'" stroke="#ff5555" stroke-opacity="0.55" stroke-width="0.8" stroke-dasharray="4 3"/>';
+  s+='<text x="'+(PL+3)+'" y="'+(parseFloat(pminY)-2)+'" font-size="7.5" font-family="monospace" fill="#ff7777">P_min</text>';
+
+  // 滲透深度曲線（橙）
+  var lfArr=[];
+  for(var i=0;i<=N;i++){
+	var t=maxT*i/N*60;
+	var lf=Math.min(Math.sqrt(G.C_pen*t),G.df);
+	lfArr.push([PL+cw*i/N, PT+ch*(1-lf/maxL)]);
+  }
+  s+='<polyline points="'+pts(lfArr)+'" fill="none" stroke="#ff6b35" stroke-width="2" stroke-linejoin="round"/>';
+
+  // 壓力曲線（青）
+  var pArr=[];
+  for(var i=0;i<=N;i++){
+	var t=maxT*i/N*60;
+	var lf=Math.min(Math.sqrt(G.C_pen*t),G.df);
+	var V=G.w*G.e*lf*sinTh;
+	var P=Math.max(G.P0-G.alpha*V,0);
+	pArr.push([PL+cw*i/N, PT+ch*(1-P/maxP)]);
+  }
+  s+='<polyline points="'+pts(pArr)+'" fill="none" stroke="#00d4ff" stroke-width="2.2" stroke-linejoin="round"/>';
+
+  // 充填完成線
+  if(G.t_full_min<=maxT){
+	var tfX=(PL+cw*G.t_full_min/maxT).toFixed(1);
+	s+='<line x1="'+tfX+'" y1="'+PT+'" x2="'+tfX+'" y2="'+(PT+ch)+'" stroke="#39d353" stroke-opacity="0.7" stroke-width="1" stroke-dasharray="4 3"/>';
+	s+='<text x="'+tfX+'" y="'+(PT+ch+36)+'" text-anchor="middle" font-size="8" font-family="monospace" fill="#39d353">充填完成</text>';
+  }
+
+  // 軸
+  s+=svgYLeft(maxP,3,'#00d4ff','P (MPa)');
+  s+=svgYRight(maxL,0,'#ff6b35','lf (mm)');
+  s+=svgXAxis(maxT,'時間 (min)');
+
+
+  return svgWrap(s, VH);
+}
+
+// ═══════════════════
+// FIG.2：流量 Q(t)
+// ═══════════════════
+function makeFlowChart(){
+  var H2=230, ch2=ph(H2);
+  var maxT=Math.max(G.t_full_min*1.5, G.pot*1.3, 40);
+  var sinTh=Math.sin(G.theta*Math.PI/180);
+  var cw=pw();
+  // Q at t=30s for scale
+  var lf0=Math.sqrt(G.C_pen*30); if(lf0<1e-9)lf0=1e-9;
+  var Q0=(G.w*Math.pow(G.e,3)*sinTh*sinTh*G.P0)/(12*G.mu_mm*lf0);
+  var maxQ=Math.max(Q0*1.4,1e-12);
+
+  var s=svgGrid(4,4,H2);
+  var N=150, qArr=[];
+  for(var i=1;i<=N;i++){
+	var ts=maxT*i/N*60;
+	var lf=Math.min(Math.sqrt(G.C_pen*ts),G.df);
+	if(lf<1e-9)continue;
+	var P=Math.max(G.P0-G.alpha*G.w*G.e*lf*sinTh,0);
+	var Q=(G.w*Math.pow(G.e,3)*sinTh*sinTh*P)/(12*G.mu_mm*lf);
+	qArr.push([PL+cw*i/N, PT+ch2*(1-Math.min(Q/maxQ,1))]);
+  }
+  s+='<polyline points="'+pts(qArr)+'" fill="none" stroke="#39d353" stroke-width="2" stroke-linejoin="round"/>';
+
+  // 左軸（科學記號）
+  var N4=4;
+  for(var i=0;i<=N4;i++){
+	var y=(PT+ch2*i/N4).toFixed(1);
+	var v=(maxQ*(N4-i)/N4).toExponential(1);
+	s+='<line x1="'+(PL-4)+'" y1="'+y+'" x2="'+PL+'" y2="'+y+'" stroke="#39d353" stroke-opacity="0.5" stroke-width="0.8"/>';
+	s+='<text x="'+(PL-7)+'" y="'+(parseFloat(y)+3.5).toFixed(1)+'" text-anchor="end" font-size="9" font-family="monospace" fill="#39d353">'+v+'</text>';
+  }
+  var cy2=(PT+ch2/2).toFixed(1);
+  s+='<text text-anchor="middle" font-size="9" font-family="monospace" fill="#39d353" transform="translate(12,'+cy2+') rotate(-90)">Q (mm³/s)</text>';
+  s+=svgXAxis(maxT,'時間 (min)',H2);
+
+  return svgWrap(s,H2);
+}
+
+// ═════════════════════════
+// FIG.3：橡皮筋力-位移
+// ═════════════════════════
+function makeRubberChart(){
+  var H3=230, ch3=ph(H3);
+  var maxDisp=G.dL0+20;
+  var maxF=G.n*G.k_eff*maxDisp*1.08;
+  var cw=pw();
+
+  var s=svgGrid(4,4,H3);
+  // 力-位移線
+  var fArr=[];
+  for(var i=0;i<=100;i++){
+	var d=maxDisp*i/100;
+	var F=G.n*G.k_eff*d;
+	fArr.push([PL+cw*i/100, PT+ch3*(1-F/maxF)]);
+  }
+  s+='<polyline points="'+pts(fArr)+'" fill="none" stroke="#ff6b35" stroke-width="2.2" stroke-linejoin="round"/>';
+
+  // 安裝工作點
+  var wx=(PL+cw*G.dL0/maxDisp).toFixed(1);
+  var wy=(PT+ch3*(1-G.n*G.k_eff*G.dL0/maxF)).toFixed(1);
+  s+='<line x1="'+wx+'" y1="'+PT+'" x2="'+wx+'" y2="'+(PT+ch3)+'" stroke="#00d4ff" stroke-opacity="0.45" stroke-width="0.8" stroke-dasharray="3 3"/>';
+  s+='<line x1="'+PL+'" y1="'+wy+'" x2="'+(PL+cw)+'" y2="'+wy+'" stroke="#00d4ff" stroke-opacity="0.45" stroke-width="0.8" stroke-dasharray="3 3"/>';
+  s+='<circle cx="'+wx+'" cy="'+wy+'" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="1.5"/>';
+  s+='<text x="'+(parseFloat(wx)+7)+'" y="'+(parseFloat(wy)-5)+'" font-size="8" font-family="monospace" fill="#00d4ff">P₀='+G.P0.toFixed(3)+' MPa</text>';
+
+  s+=svgYLeft(maxF,1,'#ff6b35','F (N)',H3);
+  s+=svgXAxis(maxDisp,'伸長量 ΔL (mm)',H3);
+
+  return svgWrap(s,H3);
+}
+
+// ── 組裝圖表頁 ──
+function buildChartPage(){
+  document.getElementById('chart-content').innerHTML=
+  '<div class="card" id="card-ch1">'+
+	'<div class="card-head" onclick="toggleCard(\'ch1\')">'+
+	  '<div class="card-head-icon" style="background:rgba(0,212,255,0.1)">📈</div>'+
+	  '<h3>壓力歷時曲線 P(t)</h3><span class="chevron">▼</span>'+
+	'</div>'+
+	'<div class="card-body" style="padding:10px">'+
+	  '<div class="chart-wrap">'+
+		'<div class="chart-label">FIG.1 — 注膠壓力 &amp; 滲透深度 vs. 時間</div>'+
+		'<div id="svg-wrap1"></div>'+
+		'<div class="legend" style="margin-top:8px">'+
+		  '<div class="legend-item"><div class="legend-dot" style="background:#00d4ff"></div>壓力 P(t)（左軸 MPa）</div>'+
+		  '<div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div>滲透深度 lf(t)（右軸 mm）</div>'+
+		  '<div class="legend-item"><span style="color:#ffc107;font-size:13px;letter-spacing:-1px">╌╌</span>&ensp;適用期限</div>'+
+		  '<div class="legend-item"><span style="color:#ff6666;font-size:13px;letter-spacing:-1px">╌╌</span>&ensp;P_min = 0.05 MPa</div>'+
+		  '<div class="legend-item"><span style="color:#39d353;font-size:13px;letter-spacing:-1px">╌╌</span>&ensp;充填完成</div>'+
+		'</div>'+
+
+	  '</div>'+
+	'</div>'+
+  '</div>'+
+  '<div class="card" id="card-ch2">'+
+	'<div class="card-head" onclick="toggleCard(\'ch2\')">'+
+	  '<div class="card-head-icon" style="background:rgba(57,211,83,0.1)">📉</div>'+
+	  '<h3>注膠流量 Q(t) 曲線</h3><span class="chevron">▼</span>'+
+	'</div>'+
+	'<div class="card-body" style="padding:10px">'+
+	  '<div class="chart-wrap">'+
+		'<div class="chart-label">FIG.2 — 瞬時流量 Q(t) vs. 時間</div>'+
+		'<div id="svg-wrap2"></div>'+
+	  '</div>'+
+	'</div>'+
+  '</div>'+
+  '<div class="card" id="card-ch3">'+
+	'<div class="card-head" onclick="toggleCard(\'ch3\')">'+
+	  '<div class="card-head-icon" style="background:rgba(255,107,53,0.1)">🔴</div>'+
+	  '<h3>橡皮筋力-位移曲線</h3><span class="chevron">▼</span>'+
+	'</div>'+
+	'<div class="card-body" style="padding:10px">'+
+	  '<div class="chart-wrap">'+
+		'<div class="chart-label">FIG.3 — 橡皮筋合力 F vs. 伸長量 ΔL</div>'+
+		'<div id="svg-wrap3"></div>'+
+	  '</div>'+
+	'</div>'+
+  '</div>';
+
+  document.getElementById('svg-wrap1').innerHTML=makePressureChart();
+  document.getElementById('svg-wrap2').innerHTML=makeFlowChart();
+  document.getElementById('svg-wrap3').innerHTML=makeRubberChart();
+}
+
+// ── BUILD QC PAGE ──
+function buildQCPage() {
+  const G2 = G;
+  const sug = [];
+  if (!G2.pot_ok) {
+	sug.push({t:'增加初始伸長量', d:`建議 ΔL₀ ≥ ${(G2.dL0*1.2).toFixed(0)} mm，P₀ 提升至 ${(G2.P0*1.2).toFixed(3)} MPa`, c:'blue'});
+	sug.push({t:'選用較低黏度膠', d:`μ ≤ ${(G2.mu*0.8).toFixed(2)} Pa·s，可縮短充填時間 20%`, c:'green'});
+	sug.push({t:'分段注膠施工', d:`每段深度 ${(G2.df/3).toFixed(0)} mm，分 3 次完成，各段均在適用期內`, c:'orange'});
+  }
+  if (!G2.vol_ok) {
+	sug.push({t:'增大注射筒規格', d:`建議改用 ø${(G2.d*1.3).toFixed(0)}mm 筒，容積增加至 ${(G2.Vmax*1.7/1000).toFixed(0)} mL 以上`, c:'blue'});
+  }
+  if (!G2.press_range_ok && G2.P0 < 0.05) {
+	sug.push({t:'增加橡皮筋根數或伸長量', d:`建議 n × k_eff × ΔL₀ ≥ ${(0.07*G2.Ap).toFixed(0)} N`, c:'orange'});
+  }
+  if (!G2.press_range_ok && G2.P0 > 0.40) {
+	sug.push({t:'減少橡皮筋根數或伸長量', d:`目前壓力過高，可能造成二次損傷，建議 P₀ ≤ 0.35 MPa`, c:'orange'});
+  }
+
+  const sugHTML = `
+	${buildSugHTML()}
+	<div class="divider"></div>
+	<div style="margin-top:4px">
+	  <div class="cell-label" style="font-size:10px;letter-spacing:1px;color:var(--text2);margin-bottom:8px">▸ 計算摘要</div>
+	  <div class="info-row"><span class="info-key">初始壓力 P₀</span><span class="info-val hl">${G2.P0.toFixed(4)} MPa（${(G2.P0*10.197).toFixed(3)} kgf/cm²）</span></div>
+	  <div class="info-row"><span class="info-key">壓力衰減係數 α</span><span class="info-val">${G2.alpha.toExponential(3)} MPa/mm³</span></div>
+	  <div class="info-row"><span class="info-key">完填時間 t_full</span><span class="info-val ${G2.pot_ok?'hl':''}">${G2.t_full_min.toFixed(1)} min（適用期 ${G2.pot} min）</span></div>
+	  <div class="info-row"><span class="info-key">完填時壓力</span><span class="info-val">${G2.P_at_full.toFixed(4)} MPa</span></div>
+	  <div class="info-row"><span class="info-key">設計注入量</span><span class="info-val">${(G2.V_inject/1000).toFixed(1)} mL（裂縫體積 ${(G2.V_crack/1000).toFixed(1)} mL）</span></div>
+	  <div class="info-row"><span class="info-key">依據規範</span><span class="info-val" style="font-size:11px">ACI 224.1R / CNS 3090</span></div>
+	</div>`;
+
+  document.getElementById('qc-content').innerHTML = `
+
+
+  <div class="card" id="card-sug">
+	<div class="card-head" onclick="toggleCard('sug')">
+	  <div class="card-head-icon" style="background:rgba(255,107,53,0.1)">🛠️</div>
+	  <h3>設計改善建議</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  ${sugHTML}
+	  <div class="divider"></div>
+	  <div class="qc-section">
+		<div class="qc-section-title" style="color:var(--text2)">設計參數摘要</div>
+		<div class="info-row"><span class="info-key">初始壓力 P₀</span><span class="info-val hl">${G2.P0.toFixed(4)} MPa</span></div>
+		<div class="info-row"><span class="info-key">壓力衰減係數 α</span><span class="info-val">${G2.alpha.toExponential(3)} MPa/mm³</span></div>
+		<div class="info-row"><span class="info-key">完填時間 t_full</span><span class="info-val ${G2.pot_ok?'hl':''}">${G2.t_full_min.toFixed(1)} min</span></div>
+		<div class="info-row"><span class="info-key">完填時壓力 P(t_full)</span><span class="info-val">${G2.P_at_full.toFixed(4)} MPa</span></div>
+		<div class="info-row"><span class="info-key">設計注入量</span><span class="info-val">${(G2.V_inject/1000).toFixed(1)} mL</span></div>
+		<div class="info-row"><span class="info-key">滲透深度係數 C</span><span class="info-val">${G2.C_pen.toFixed(6)} mm²/s</span></div>
+		<div class="info-row"><span class="info-key">依據規範</span><span class="info-val" style="font-size:11px">ACI 224.1R / CNS 3090</span></div>
+	  </div>
+	</div>
+  </div>
+  <div class="card" id="card-qc1">
+	<div class="card-head" onclick="toggleCard('qc1')">
+	  <div class="card-head-icon" style="background:rgba(0,212,255,0.1)">🔍</div>
+	  <h3>施工前查核</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="qc-progress-wrap">
+		<div class="qc-progress-label"><span>查核進度</span><span class="qc-progress-count">0 / 7 已確認</span></div>
+		<div class="qc-progress-bar"><div class="qc-progress-fill" style="width:0%"></div></div>
+	  </div>
+	  <div class="qc-section">
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>橡皮筋勁度實測標定</strong><small>每批次抽測 3 根取平均，記錄勁度值。老化修正係數 η_age = ${G2.age}，有效勁度 k_eff = ${G2.k_eff.toFixed(4)} N/mm</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>初始壓力量測驗核</strong><small>P₀ = ${G2.P0.toFixed(4)} MPa　規範：0.05~0.40 MPa　→ ${G2.press_range_ok?'✅ 符合':'❌ 不符，需調整後確認'}</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>裂縫開口量測（≥5點）</strong><small>採裂縫計逐點量測，記錄最大/最小/平均值，本案 e_avg = ${G2.e} mm</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>裂縫深度超音波量測</strong><small>d_f = ${G2.df} mm　使用超音波測距儀確認貫穿深度</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>混凝土表面前處理</strong><small>鑽孔後吹除粉塵，確認孔壁乾燥無積水，基面無油脂污染</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>環氧樹脂混膠確認</strong><small>混膠比 ${document.getElementById('p_ratio').value}（體積），充分攪拌 3 分鐘，確認顏色均勻無條紋</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>注射筒容量確認</strong><small>設計注入量 ${(G2.V_inject/1000).toFixed(1)} mL，注射筒容積 ${(G2.Vmax/1000).toFixed(1)} mL　→ ${G2.vol_ok?'✅ 足夠':'❌ 容量不足，需換大筒後確認'}</small></div>
+		</div>
+	  </div>
+	</div>
+  </div>
+
+  <div class="card" id="card-qc2">
+	<div class="card-head" onclick="toggleCard('qc2')">
+	  <div class="card-head-icon" style="background:rgba(255,193,7,0.1)">📡</div>
+	  <h3>施工中監控</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="qc-progress-wrap">
+		<div class="qc-progress-label"><span>查核進度</span><span class="qc-progress-count">0 / 6 已確認</span></div>
+		<div class="qc-progress-bar"><div class="qc-progress-fill" style="width:0%"></div></div>
+	  </div>
+	  <div class="qc-section">
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>壓力每 15 分鐘記錄一次</strong><small>記錄實際壓力值，若 P(t) &lt; 0.05 MPa 立即更換橡皮筋補充預拉力<br>理論值：t=15min → P = ${(G2.P0 - G2.alpha * G2.w * G2.e * Math.sin(G2.theta*Math.PI/180) * Math.sqrt(G2.C_pen*900)).toFixed(4)} MPa</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>適用期管控（警戒線 85%）</strong><small>t_full = ${G2.t_full_min.toFixed(1)} min，適用期 = ${G2.pot} min，警戒時間 = ${(G2.pot*0.85).toFixed(0)} min<br>${G2.pot_ok?'✅ 充填時間在警戒線內':'⚠️ 充填時間超過警戒線，建議改善後確認'}</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>鄰孔溢膠確認</strong><small>相鄰注膠孔出膠時，代表區段已充填，可依序封閉注膠孔並移至下一孔段</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>橡皮筋張力維持</strong><small>若橡皮筋明顯鬆弛（壓力下降 30% 以上），立即補換新品並重新預拉至 ΔL₀ = ${G2.dL0} mm</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>溫度記錄（黏度影響）</strong><small>施工溫度 ${G2.temp}°C，黏度 μ = ${G2.mu} Pa·s<br>溫度每升10°C，黏度降約35%，充填速度加快，需注意適用期縮短</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>注射筒殘量計算</strong><small>每孔注膠完成後記錄殘量，累計確認總注入量 ≥ ${(G2.V_inject/1000).toFixed(1)} mL</small></div>
+		</div>
+	  </div>
+	</div>
+  </div>
+
+  <div class="card" id="card-qc3">
+	<div class="card-head" onclick="toggleCard('qc3')">
+	  <div class="card-head-icon" style="background:rgba(57,211,83,0.1)">🏆</div>
+	  <h3>施工後驗收</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div class="qc-progress-wrap">
+		<div class="qc-progress-label"><span>查核進度</span><span class="qc-progress-count">0 / 5 已確認</span></div>
+		<div class="qc-progress-bar"><div class="qc-progress-fill" style="width:0%"></div></div>
+	  </div>
+	  <div class="qc-section">
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>超音波掃描充填率</strong><small>固化後（≥24hr）以超音波掃描確認充填率 ≥ 85%，若局部未充填，需補打注膠孔</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>注射筒殘量記錄匯整</strong><small>總注入量記錄、各孔充填時間記錄，彙整施工報告留存</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>裂縫表面修補</strong><small>注膠孔封填，裂縫表面以環氧樹脂砂漿或彈性填縫材封面處理</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>養護期管制（7日）</small></strong><small>養護期間避免振動與衝擊，溫度維持 15~35°C，禁止荷載試驗</small></div>
+		</div>
+		<div class="qc-item" onclick="toggleQC(this)">
+		  <div class="qc-chk pend"></div>
+		  <div class="qc-text"><strong>固化強度確認</strong><small>環氧樹脂固化後抗拉強度 ≥ 30 MPa，黏結強度 ≥ 2.5 MPa，依規範進行拉拔試驗</small></div>
+		</div>
+	  </div>
+	</div>
+  </div>
+  `;
+}
+
+// ── QC 勾選互動 ──
+function toggleQC(el) {
+  // 切換 checked 狀態
+  el.classList.toggle('checked');
+  // 更新勾選框圖示
+  var chk = el.querySelector('.qc-chk');
+  if (el.classList.contains('checked')) {
+	chk.classList.remove('pend');
+	if (!chk.classList.contains('fail') && !chk.classList.contains('warn')) {
+	  chk.classList.add('ok');
+	}
+	chk.textContent = '✓';
+  } else {
+	chk.classList.remove('ok');
+	chk.classList.add('pend');
+	chk.textContent = '';
+  }
+  // 更新進度條
+  var section = el.closest('.card-body');
+  if (!section) return;
+  var items   = section.querySelectorAll('.qc-item');
+  var checked = section.querySelectorAll('.qc-item.checked').length;
+  var total   = items.length;
+  var bar  = section.querySelector('.qc-progress-fill');
+  var cnt  = section.querySelector('.qc-progress-count');
+  if (bar) bar.style.width = (checked/total*100).toFixed(0) + '%';
+  if (cnt) cnt.textContent = checked + ' / ' + total + ' 已確認';
+}
+
+// ── INIT ──
+updateAp();
+</script>
+<!-- PDF 列印目標（動態產生） -->
+<div id="pdf-target"></div>
+
+<!-- jsPDF + html2canvas CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>function buildReportPage() {
+  if (!G || !G.P0) {
+	document.getElementById('report-content').innerHTML =
+	  '<div class="empty-state"><div class="icon">📄</div><h3>尚未產生報告</h3><p>請先執行計算</p></div>';
+	return;
+  }
+  const today = new Date();
+  const dateStr = today.getFullYear() + '/' + String(today.getMonth()+1).padStart(2,'0') + '/' + String(today.getDate()).padStart(2,'0');
+
+  document.getElementById('report-content').innerHTML = `
+  <!-- 報告資訊輸入 -->
+  <div class="card">
+	<div class="card-head" onclick="toggleCard('rpt-info')">
+	  <div class="card-head-icon" style="background:rgba(255,107,53,0.15)">📋</div>
+	  <h3>報告基本資料</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body" id="card-rpt-info">
+	  <div class="input-row">
+		<div class="rpt-field">
+		  <label>工程名稱</label>
+		  <input id="rpt-name" type="text" placeholder="例：省道X線某橋梁補強工程">
+		</div>
+	  </div>
+	  <div class="input-row">
+		<div class="rpt-field">
+		  <label>案號 / 圖號</label>
+		  <input id="rpt-no" type="text" placeholder="例：BR-2025-001">
+		</div>
+		<div class="rpt-field">
+		  <label>報告日期</label>
+		  <input id="rpt-date" type="text" value="${dateStr}">
+		</div>
+	  </div>
+	  <div class="input-row">
+		<div class="rpt-field">
+		  <label>計算者</label>
+		  <input id="rpt-author" type="text" placeholder="結構技師姓名">
+		</div>
+		<div class="rpt-field">
+		  <label>審核者</label>
+		  <input id="rpt-reviewer" type="text" placeholder="審核人員姓名">
+		</div>
+	  </div>
+	  <div class="rpt-field">
+		<label>構件說明</label>
+		<textarea id="rpt-desc" placeholder="例：RC橋墩柱，裂縫形態：彎曲裂縫，位置：第3墩北側"></textarea>
+	  </div>
+	</div>
+  </div>
+
+  <!-- 報告內容選擇 -->
+  <div class="card" id="card-rpt-sel">
+	<div class="card-head" onclick="toggleCard('rpt-sel')">
+	  <div class="card-head-icon" style="background:rgba(0,212,255,0.15)">☑️</div>
+	  <h3>報告內容選擇</h3><span class="chevron">▼</span>
+	</div>
+	<div class="card-body">
+	  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+		${[
+		  ['chk-cover',   '封面資訊',         true],
+		  ['chk-params',  '設計參數彙整',     true],
+		  ['chk-steps',   '9步驟計算過程',    true],
+		  ['chk-results', '計算結果儀表板',   true],
+		  ['chk-chart',   '壓力歷時圖表',     true],
+		  ['chk-sug',     '設計優化建議',     true],
+		  ['chk-qc',      '品管查核清單',     true],
+		  ['chk-sign',    '簽核欄位',         true],
+		].map(([id,label,checked])=>`
+		  <label style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg2);border-radius:6px;cursor:pointer;font-size:13px;color:var(--text)">
+			<input type="checkbox" id="${id}" ${checked?'checked':''} style="width:16px;height:16px;accent-color:var(--accent)">
+			${label}
+		  </label>`).join('')}
+	  </div>
+	</div>
+  </div>
+
+  <!-- 匯出按鈕 -->
+  <button class="btn-pdf primary" onclick="exportPDF()">
+	📄 產生 PDF 計算書
+  </button>
+  <button class="btn-pdf secondary" onclick="previewReport()">
+	👁 預覽報告內容
+  </button>
+  <div id="pdf-status" class="pdf-status"></div>
+
+  <!-- 預覽區 -->
+  <div id="report-preview" style="display:none;margin-top:8px"></div>
+  `;
+}
+
+function buildPDFContent(chartPngs) {
+  chartPngs = chartPngs || {};
+  const name     = document.getElementById('rpt-name')?.value     || '（未填寫）';
+  const no       = document.getElementById('rpt-no')?.value       || '—';
+  const date     = document.getElementById('rpt-date')?.value     || '—';
+  const author   = document.getElementById('rpt-author')?.value   || '—';
+  const reviewer = document.getElementById('rpt-reviewer')?.value || '—';
+  const desc     = document.getElementById('rpt-desc')?.value     || '—';
+
+  const chk = id => document.getElementById(id)?.checked;
+  const G2  = G;
+
+  // QC 勾選狀態
+  function getQCItems(cardId) {
+	const items = document.querySelectorAll('#card-'+cardId+' .qc-item');
+	return Array.from(items).map(el => ({
+	  title: el.querySelector('strong')?.textContent || '',
+	  desc:  el.querySelector('small')?.textContent  || '',
+	  done:  el.classList.contains('checked')
+	}));
+  }
+
+  let html = '<div class="pdf-page">';
+
+  // ── 封面 ──
+  if (chk('chk-cover')) {
+	const statusColor = (G2.press_range_ok && G2.press_full_ok && G2.vol_ok && G2.pot_ok) ? '#1a7a30' : '#b85800';
+	const statusText  = (G2.press_range_ok && G2.press_full_ok && G2.vol_ok && G2.pot_ok) ? '設計符合規範' : '設計需優化';
+	html += `
+	<div class="pdf-cover">
+	  <div style="font-size:8pt;letter-spacing:3px;color:#888;margin-bottom:4mm">結構裂縫補強設計計算書</div>
+	  <h1>橡皮筋低壓注膠補強</h1>
+	  <h2>${name}</h2>
+	  <div style="display:inline-block;padding:2mm 6mm;border-radius:2mm;background:${statusColor};color:#fff;font-size:8pt;margin-bottom:6mm">${statusText}</div>
+	  <div class="pdf-cover-grid">
+		<div class="pdf-cover-item"><label>案號</label><span>${no}</span></div>
+		<div class="pdf-cover-item"><label>報告日期</label><span>${date}</span></div>
+		<div class="pdf-cover-item"><label>計算者</label><span>${author}</span></div>
+		<div class="pdf-cover-item"><label>審核者</label><span>${reviewer}</span></div>
+		<div class="pdf-cover-item" style="grid-column:1/-1"><label>構件說明</label><span>${desc}</span></div>
+	  </div>
+	</div>`;
+  }
+
+  // ── 設計參數 ──
+  if (chk('chk-params')) {
+	html += `
+	<div class="pdf-sec">
+	  <div class="pdf-sec-title">一、設計輸入參數</div>
+	  <table class="pdf-table">
+		<tr><th>類別</th><th>參數</th><th>符號</th><th>數值</th></tr>
+		<tr><td>注膠器</td><td>注射筒內徑</td><td>d</td><td>${G2.d} mm</td></tr>
+		<tr><td>注膠器</td><td>活塞截面積</td><td>Aₚ</td><td>${G2.Ap.toFixed(1)} mm²</td></tr>
+		<tr><td>橡皮筋</td><td>根數</td><td>n</td><td>${G2.n} 根</td></tr>
+		<tr><td>橡皮筋</td><td>等效勁度</td><td>k_rb</td><td>${G2.k_rb} N/mm</td></tr>
+		<tr><td>橡皮筋</td><td>老化修正係數</td><td>η_age</td><td>${G2.age}</td></tr>
+		<tr><td>橡皮筋</td><td>有效勁度</td><td>k_eff</td><td>${G2.k_eff.toFixed(4)} N/mm</td></tr>
+		<tr><td>橡皮筋</td><td>安裝伸長量</td><td>ΔL₀</td><td>${G2.dL0} mm</td></tr>
+		<tr><td>環氧樹脂</td><td>動態黏度</td><td>μ</td><td>${G2.mu} Pa·s</td></tr>
+		<tr><td>環氧樹脂</td><td>適用期</td><td>t_pot</td><td>${G2.pot} min</td></tr>
+		<tr><td>裂縫幾何</td><td>裂縫開口</td><td>e</td><td>${G2.e} mm</td></tr>
+		<tr><td>裂縫幾何</td><td>裂縫深度</td><td>d_f</td><td>${G2.df} mm</td></tr>
+		<tr><td>裂縫幾何</td><td>有效注膠寬</td><td>w</td><td>${G2.w} mm</td></tr>
+		<tr><td>裂縫幾何</td><td>傾斜角</td><td>θ</td><td>${G2.theta}°</td></tr>
+	  </table>
+	</div>`;
+  }
+
+  // ── 計算結果儀表板 ──
+  if (chk('chk-results')) {
+	const pOk = G2.press_range_ok, fOk = G2.press_full_ok, vOk = G2.vol_ok, tOk = G2.pot_ok;
+	html += `
+	<div class="pdf-sec">
+	  <div class="pdf-sec-title">二、計算結果摘要</div>
+	  <div class="pdf-metric-grid">
+		<div class="pdf-metric">
+		  <div class="pdf-metric-label">初始壓力 P₀</div>
+		  <div class="pdf-metric-val ${pOk?'pdf-ok':'pdf-fail'}">${G2.P0.toFixed(4)}</div>
+		  <div class="pdf-metric-sub">MPa（規範 0.05~0.40）${pOk?'✓ 符合':'✗ 不符'}</div>
+		</div>
+		<div class="pdf-metric">
+		  <div class="pdf-metric-label">完填時壓力 P(t_full)</div>
+		  <div class="pdf-metric-val ${fOk?'pdf-ok':'pdf-fail'}">${G2.P_at_full.toFixed(4)}</div>
+		  <div class="pdf-metric-sub">MPa ${fOk?'✓ ≥ 0.05 MPa':'✗ 壓力不足'}</div>
+		</div>
+		<div class="pdf-metric">
+		  <div class="pdf-metric-label">完填時間 t_full</div>
+		  <div class="pdf-metric-val ${tOk?'pdf-ok':'pdf-warn'}">${G2.t_full_min.toFixed(1)}</div>
+		  <div class="pdf-metric-sub">min（適用期 ${G2.pot} min）${tOk?'✓ 安全':'⚠ 注意'}</div>
+		</div>
+		<div class="pdf-metric">
+		  <div class="pdf-metric-label">設計注入量</div>
+		  <div class="pdf-metric-val ${vOk?'pdf-ok':'pdf-fail'}">${(G2.V_inject/1000).toFixed(1)}</div>
+		  <div class="pdf-metric-sub">mL（筒容 ${(G2.Vmax/1000).toFixed(0)} mL）${vOk?'✓ 足夠':'✗ 不足'}</div>
+		</div>
+	  </div>
+	</div>`;
+  }
+
+  // ── 9步驟計算過程 ──
+  if (chk('chk-steps')) {
+	html += `
+	<div class="pdf-sec">
+	  <div class="pdf-sec-title">三、逐步計算過程</div>
+	  <table class="pdf-table">
+		<tr><th>步驟</th><th>計算項目</th><th>公式及結果</th></tr>
+		<tr><td>1</td><td>活塞截面積</td><td>Aₚ = π×(${G2.d}/2)² = <b>${G2.Ap.toFixed(2)} mm²</b></td></tr>
+		<tr><td>2</td><td>有效勁度</td><td>k_eff = ${G2.k_rb}×${G2.age} = <b>${G2.k_eff.toFixed(4)} N/mm</b></td></tr>
+		<tr><td>3</td><td>初始壓力</td><td>P₀ = n×k_eff×ΔL₀/Aₚ = ${G2.n}×${G2.k_eff.toFixed(4)}×${G2.dL0}/${G2.Ap.toFixed(1)} = <b>${G2.P0.toFixed(4)} MPa</b></td></tr>
+		<tr><td>4</td><td>壓力衰減係數</td><td>α = n×k_eff/Aₚ² = <b>${G2.alpha.toExponential(4)} MPa/mm³</b></td></tr>
+		<tr><td>5</td><td>裂縫體積</td><td>V = w×e×d_f×sinθ = ${G2.w}×${G2.e}×${G2.df}×${G2.sinTh.toFixed(4)} = <b>${(G2.V_crack/1000).toFixed(2)} mL</b></td></tr>
+		<tr><td>6</td><td>滲透係數 C</td><td>C = e²×P₀×sin²θ/(6×μ_mm×ξ) = <b>${G2.C_pen.toFixed(4)} mm²/s</b>（ξ=${G2.xi}）</td></tr>
+		<tr><td>7</td><td>壓力歷時方程</td><td>P(t) = ${G2.P0.toFixed(4)} − ${(G2.alpha*G2.w*G2.e*G2.sinTh*Math.sqrt(G2.C_pen)).toExponential(3)} × √t</td></tr>
+		<tr><td>8</td><td>完全充填時間</td><td>t_full = d_f²/C = ${G2.df}²/${G2.C_pen.toFixed(4)} = <b>${G2.t_full_sec.toFixed(0)} s = ${G2.t_full_min.toFixed(1)} min</b></td></tr>
+		<tr><td>9</td><td>完填時壓力驗核</td><td>P(t_full) = P₀ − α×V_crack = <b>${G2.P_at_full.toFixed(4)} MPa</b> ${G2.press_full_ok?'≥ 0.05 ✓':'< 0.05 ✗'}</td></tr>
+	  </table>
+	</div>`;
+  }
+
+  // ── 壓力歷時圖表（三張 PNG 直接嵌入）──
+  if (chk('chk-chart')) {
+	function chartImg(png, caption) {
+	  if (png) {
+		return '<img src="' + png + '" style="width:100%;height:auto;display:block;border-radius:4pt;margin-bottom:3mm">'
+			 + '<div style="font-size:7pt;color:#666;text-align:center;margin-bottom:4mm">' + caption + '</div>';
+	  }
+	  return '<div style="color:#aaa;font-size:8pt;padding:4mm;text-align:center;border:0.5pt solid #ccc;border-radius:2mm;margin-bottom:3mm">'
+		   + caption + '（圖表暫無法顯示）</div>';
+	}
+	html += `
+	<div class="pdf-sec">
+	  <div class="pdf-sec-title">四、壓力歷時圖表</div>
+	  ${chartImg(chartPngs.fig1, 'FIG.1 — 注膠壓力 P(t) &amp; 滲透深度 lf(t) vs. 時間')}
+	</div>
+	<div class="pdf-sec">
+	  ${chartImg(chartPngs.fig2, 'FIG.2 — 瞬時注膠流量 Q(t) vs. 時間')}
+	</div>
+	<div class="pdf-sec">
+	  ${chartImg(chartPngs.fig3, 'FIG.3 — 橡皮筋合力 F vs. 伸長量 ΔL')}
+	</div>`;
+
+  // ── 設計優化建議 ──
+  if (chk('chk-sug')) {
+	const noIssue = G2.press_range_ok && G2.press_full_ok && G2.vol_ok && G2.pot_ok;
+	html += `
+	<div class="pdf-sec">
+	  <div class="pdf-sec-title">${chk('chk-chart')?'五':'四'}、設計優化建議</div>
+	  ${noIssue
+		? '<div style="color:#1a7a30;font-weight:700;padding:3mm">✓ 設計參數全部符合規範，無需調整</div>'
+		: '<div style="color:#b85800;padding:2mm 0 1mm">以下項目建議優化：</div>'
+	  }
+	  <table class="pdf-table">
+		<tr><th>問題項目</th><th>建議措施</th><th>目標值</th></tr>
+		${!G2.pot_ok ? `
+		<tr><td>充填時間超限</td><td>增加橡皮筋伸長量</td><td>ΔL₀ ≥ ${Math.ceil(G2.dL0*1.2/5)*5} mm</td></tr>
+		<tr><td>充填時間超限</td><td>選用低黏度環氧樹脂</td><td>μ ≤ ${(G2.mu*0.78).toFixed(2)} Pa·s</td></tr>` : ''}
+		${!G2.vol_ok ? `<tr><td>注射筒容積不足</td><td>更換大容積注射筒</td><td>容積 ≥ ${Math.ceil(G2.V_inject/1000*1.1)} mL</td></tr>` : ''}
+		${!G2.press_full_ok ? `<tr><td>完填壓力不足</td><td>增加橡皮筋預拉量</td><td>P(t_full) ≥ 0.05 MPa</td></tr>` : ''}
+		${noIssue ? '<tr><td colspan="3" class="pdf-ok" style="text-align:center">全部符合規範 ✓</td></tr>' : ''}
+	  </table>
+	</div>`;
+  }
+
+  // ── 品管查核清單 ──
+  if (chk('chk-qc')) {
+	const secNum = [chk('chk-chart'),chk('chk-sug')].filter(Boolean).length + (chk('chk-chart')?4:3) + 1;
+	const qc1 = getQCItems('qc1');
+	const qc2 = getQCItems('qc2');
+	const qc3 = getQCItems('qc3');
+	function qcRows(items) {
+	  return items.map(it=>`
+		<div class="pdf-qc-item">
+		  <div class="pdf-qc-chk ${it.done?'done':''}">${it.done?'✓':''}</div>
+		  <div class="pdf-qc-text"><strong>${it.title}</strong><small>${it.desc.substring(0,80)}${it.desc.length>80?'…':''}</small></div>
+		</div>`).join('');
+	}
+	html += `
+	<div class="pdf-sec">
+	  <div class="pdf-sec-title">六、施工品管查核清單</div>
+	  <div style="font-weight:700;font-size:8.5pt;color:#1a3a5c;margin:2mm 0 1mm">▸ 施工前（${qc1.filter(i=>i.done).length}/${qc1.length} 已確認）</div>
+	  ${qcRows(qc1)}
+	  <div style="font-weight:700;font-size:8.5pt;color:#1a3a5c;margin:3mm 0 1mm">▸ 施工中（${qc2.filter(i=>i.done).length}/${qc2.length} 已確認）</div>
+	  ${qcRows(qc2)}
+	  <div style="font-weight:700;font-size:8.5pt;color:#1a3a5c;margin:3mm 0 1mm">▸ 施工後（${qc3.filter(i=>i.done).length}/${qc3.length} 已確認）</div>
+	  ${qcRows(qc3)}
+	</div>`;
+  }
+
+  // ── 簽核欄位 ──
+  if (chk('chk-sign')) {
+	html += `
+	<div class="pdf-sec" style="margin-top:8mm">
+	  <div class="pdf-sec-title">簽核</div>
+	  <table class="pdf-table">
+		<tr><th style="width:25%">計算者</th><th style="width:25%">審核者</th><th style="width:25%">核准者</th><th style="width:25%">日期</th></tr>
+		<tr style="height:14mm"><td></td><td></td><td></td><td>${date}</td></tr>
+	  </table>
+	</div>`;
+  }
+
+  // ── 頁尾 ──
+  html += `
+  <div class="pdf-footer">
+	<span>依據：ACI 224.1R / CNS 3090 / 交通部橋梁設計規範</span>
+	<span>案號：${no}　產生日期：${date}</span>
+  </div>`;
+
+  html += '</div>'; // pdf-page
+  return html;
+}
+}
+
+function svgToPngDataUrl(svgEl, targetW) {
+  return new Promise(function(resolve) {
+	try {
+	  var clone = svgEl.cloneNode(true);
+	  var vb = svgEl.getAttribute('viewBox') || '0 0 480 260';
+	  var parts = vb.split(/\s+/);
+	  var vw = parseFloat(parts[2]) || 480;
+	  var vh = parseFloat(parts[3]) || 260;
+	  var scale = targetW / vw;
+	  var tw = Math.round(vw * scale);
+	  var th = Math.round(vh * scale);
+
+	  clone.setAttribute('width',  tw);
+	  clone.setAttribute('height', th);
+	  clone.setAttribute('xmlns',  'http://www.w3.org/2000/svg');
+	  clone.removeAttribute('style'); // 移除 overflow:visible 等
+
+	  // ── 關鍵修正：直接把 clone 內的第一個 rect（黑色背景）改為白色 ──
+	  // 同時掃描所有 rect，凡 fill 為深色的都改白
+	  var allRects = clone.querySelectorAll('rect');
+	  for (var ri = 0; ri < allRects.length; ri++) {
+		var rf = allRects[ri].getAttribute('fill') || '';
+		if (rf === '#0a0e14' || rf === '#0f1923' || rf === '#162030') {
+		  allRects[ri].setAttribute('fill', '#ffffff');
+		}
+	  }
+	  // 深色文字在白底下改為黑色（淺色如 #c0d8f0 改成深灰）
+	  var allTexts = clone.querySelectorAll('text');
+	  for (var ti = 0; ti < allTexts.length; ti++) {
+		var tf = allTexts[ti].getAttribute('fill') || '';
+		// 淺色文字 → 改深色
+		var lightColors = ['#c0d8f0','#8aaccc','#b0c8e0','rgba(180,200,220,0.8)',
+						   '#7a9bb5','rgba(122,155,181,0.35)'];
+		if (lightColors.indexOf(tf) >= 0 || tf.indexOf('rgba(') >= 0) {
+		  allTexts[ti].setAttribute('fill', '#333333');
+		}
+	  }
+	  // 淺色格線 → 改灰色
+	  var allLines = clone.querySelectorAll('line');
+	  for (var li = 0; li < allLines.length; li++) {
+		var ls = allLines[li].getAttribute('stroke') || '';
+		var lo = parseFloat(allLines[li].getAttribute('stroke-opacity') || '1');
+		if (ls === '#ffffff' || (lo > 0 && lo < 0.3)) {
+		  allLines[li].setAttribute('stroke', '#cccccc');
+		  allLines[li].setAttribute('stroke-opacity', '1');
+		}
+	  }
+
+	  var svgStr = new XMLSerializer().serializeToString(clone);
+	  var b64    = btoa(unescape(encodeURIComponent(svgStr)));
+	  var dataUrl = 'data:image/svg+xml;base64,' + b64;
+
+	  var img = new Image();
+	  img.onload = function() {
+		var c = document.createElement('canvas');
+		c.width = tw; c.height = th;
+		var ctx = c.getContext('2d');
+		ctx.fillStyle = '#ffffff';
+		ctx.fillRect(0, 0, tw, th);
+		ctx.drawImage(img, 0, 0, tw, th);
+		resolve(c.toDataURL('image/png'));
+	  };
+	  img.onerror = function() { resolve(null); };
+	  img.src = dataUrl;
+	} catch(e) {
+	  resolve(null);
+	}
+  });
+}
+
+async function previewReport() {
+  if (!G || !G.P0) { alert('請先執行計算'); return; }
+  const preview = document.getElementById('report-preview');
+  const status  = document.getElementById('pdf-status');
+  status.className = 'pdf-status';
+  status.textContent = '⏳ 產生預覽中…';
+  preview.style.display = 'block';
+  preview.style.overflow = 'hidden';
+  preview.style.borderRadius = '8px';
+  preview.style.marginTop = '12px';
+  preview.innerHTML = '<div style="text-align:center;padding:20px;color:#7a9bb5;font-size:13px">載入中…</div>';
+
+  // 先把三張圖轉為 PNG
+  const chartPngs = await convertAllCharts(560);
+
+  const inner = document.createElement('div');
+  inner.style.width = '794px';
+  inner.style.background = '#fff';
+  inner.style.transformOrigin = 'top left';
+
+  const availW = document.getElementById('page-report').clientWidth - 32;
+  const scale  = Math.min(availW / 794, 1);
+  inner.style.transform = 'scale(' + scale + ')';
+  inner.style.display = 'block';
+
+  inner.innerHTML = buildPDFContent(chartPngs);
+  preview.innerHTML = '';
+  preview.appendChild(inner);
+
+  // 實際高度要等 render 後才知道
+  requestAnimationFrame(function() {
+	const h = inner.getBoundingClientRect().height * scale;
+	preview.style.height = Math.max(h + 20, 200) + 'px';
+	preview.style.overflow = 'visible';
+  });
+
+  preview.scrollIntoView({ behavior: 'smooth' });
+  status.textContent = '';
+}
+
+async function convertAllCharts(w) {
+  var result = { fig1: null, fig2: null, fig3: null };
+  var s1 = document.querySelector('#svg-wrap1 svg');
+  var s2 = document.querySelector('#svg-wrap2 svg');
+  var s3 = document.querySelector('#svg-wrap3 svg');
+  if (s1) result.fig1 = await svgToPngDataUrl(s1, w);
+  if (s2) result.fig2 = await svgToPngDataUrl(s2, w);
+  if (s3) result.fig3 = await svgToPngDataUrl(s3, w);
+  return result;
+}
+
+async function exportPDF() {
+  if (!G || !G.P0) { alert('請先執行計算'); return; }
+  const status = document.getElementById('pdf-status');
+  status.className = 'pdf-status';
+  status.textContent = '⏳ 正在轉換圖表…';
+
+  try {
+	// ── 1. 確認函式庫已載入 ──
+	if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+	  throw new Error('函式庫尚未載入，請確認網路連線後重試');
+	}
+
+	// ── 2. 圖表 SVG → PNG（高解析度） ──
+	const chartPngs = await convertAllCharts(900);
+	status.textContent = '⏳ 正在渲染各頁面…';
+
+	const { jsPDF } = window.jspdf;
+	const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+	const PG_W = 210, PG_H = 297;
+	const MARGIN = 12; // mm 上下左右邊距
+	const CONTENT_W = PG_W - MARGIN * 2;  // 186mm
+	const CONTENT_H = PG_H - MARGIN * 2;  // 273mm
+
+	// A4 每 mm 對應的 pixel（@scale=2, 96dpi）
+	const MM_PX = 96 / 25.4 * 2;  // ≈7.56 px/mm
+
+	// ── 3. 建立各「區塊」容器（每個區塊獨立渲染） ──
+	// 區塊順序：封面、參數、結果、計算步驟、圖表×3、優化建議、品管、簽核
+	const G2 = G;
+	const chk = id => document.getElementById(id)?.checked;
+
+	// 先組裝完整 HTML 內容，按 pdf-sec 切分
+	const target = document.getElementById('pdf-target');
+	target.style.cssText = 'display:block;position:fixed;left:-9999px;top:0;width:' + Math.round(CONTENT_W * MM_PX / 2) + 'px;background:#fff;z-index:-1;font-family:Noto Sans TC,Microsoft JhengHei,sans-serif';
+	target.innerHTML = buildPDFContent(chartPngs);
+	await new Promise(r => setTimeout(r, 500));
+
+	// ── 4. 找所有需要渲染的區塊 ──
+	// 每個 .pdf-sec 和 .pdf-cover 視為獨立區塊，整體放置不切割
+	// 但圖表章節(.pdf-sec 含有 img 的)需保證三張圖在同一頁或各自完整
+	const sections = Array.from(target.querySelectorAll('.pdf-cover, .pdf-sec, .pdf-footer'));
+
+	let curPageH = MARGIN;  // 目前頁面已用高度 (mm)
+	let isFirst = true;
+
+	for (let i = 0; i < sections.length; i++) {
+	  const sec = sections[i];
+	  status.textContent = '⏳ 渲染第 ' + (i+1) + '/' + sections.length + ' 區塊…';
+
+	  // 渲染此區塊為 canvas
+	  const secCanvas = await html2canvas(sec, {
+		scale: 2,
+		useCORS: true,
+		allowTaint: true,
+		backgroundColor: '#ffffff',
+		logging: false,
+		windowWidth: Math.round(CONTENT_W * MM_PX / 2),
+	  });
+
+	  const secW  = CONTENT_W;
+	  const secH  = secCanvas.height / secCanvas.width * secW;  // mm
+
+	  // 若此區塊高度 < 5mm（空白或錯誤），跳過
+	  if (secH < 5) continue;
+
+	  // 判斷是否需要換頁
+	  // 條件：不是第一個區塊，且放入後會超過頁面底部
+	  if (!isFirst && curPageH + secH > PG_H - MARGIN - 4) {
+		pdf.addPage();
+		curPageH = MARGIN;
+	  }
+
+	  if (secH <= CONTENT_H) {
+		// 正常放置（不跨頁）
+		pdf.addImage(
+		  secCanvas.toDataURL('image/jpeg', 0.94),
+		  'JPEG', MARGIN, curPageH, secW, secH
+		);
+		curPageH += secH + 5; // 5mm 間距
+	  } else {
+		// 區塊本身超過一頁高度（極少見，如超長表格）→ 切割
+		const pxPerPg = Math.floor(CONTENT_H * secCanvas.width / secW);
+		let   sliceY  = 0;
+		let   firstSlice = true;
+		while (sliceY < secCanvas.height) {
+		  if (!firstSlice) { pdf.addPage(); curPageH = MARGIN; }
+		  const sliceH   = Math.min(pxPerPg, secCanvas.height - sliceY);
+		  const sliceHmm = sliceH / secCanvas.width * secW;
+		  const pc = document.createElement('canvas');
+		  pc.width = secCanvas.width; pc.height = sliceH;
+		  pc.getContext('2d').drawImage(secCanvas, 0, sliceY, secCanvas.width, sliceH, 0, 0, secCanvas.width, sliceH);
+		  pdf.addImage(pc.toDataURL('image/jpeg', 0.94), 'JPEG', MARGIN, curPageH, secW, sliceHmm);
+		  curPageH += sliceHmm + 5;
+		  sliceY += sliceH;
+		  firstSlice = false;
+		}
+	  }
+	  isFirst = false;
+	}
+
+	// ── 5. 下載 ──
+	target.style.display = 'none';
+	const rno   = (document.getElementById('rpt-no')?.value   || 'RPT').replace(/[/\\]/g, '-');
+	const rdate = (document.getElementById('rpt-date')?.value || '').replace(/\//g, '-');
+	pdf.save('注膠補強計算書_' + rno + (rdate ? '_' + rdate : '') + '.pdf');
+
+	status.className  = 'pdf-status ok';
+	status.textContent = '✅ PDF 已產生並下載！';
+
+  } catch(e) {
+	document.getElementById('pdf-target').style.display = 'none';
+	const msg = (e && e.message) ? e.message : String(e);
+	status.className  = 'pdf-status err';
+	status.textContent = '❌ 產生失敗：' + msg;
+	console.error('exportPDF error:', e);
+  }
+}
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('SW registered:', r.scope))
+      .catch(e => console.warn('SW registration failed:', e));
+  });
+}
+</script>
+</body>
+</html>
