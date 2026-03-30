@@ -1,21 +1,17 @@
-const CACHE_NAME = 'epoxy-injection-v1';
+const CACHE_NAME = 'epoxy-injection-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;600&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS.map(url => new Request(url, { mode: 'no-cors' })))
-        .catch(() => cache.addAll(['./index.html', './manifest.json']));
-    })
+    caches.open(CACHE_NAME).then(cache =>
+      cache.addAll(ASSETS).catch(() => cache.addAll(['./index.html']))
+    )
   );
   self.skipWaiting();
 });
